@@ -2,13 +2,13 @@ Spanky TTS — Development Status
 
 Current Phase
 
-Phase 1 — Android TTS Proof of Concept
+Phase 1 COMPLETE — Android TTS Proof of Concept
 
 Current Objective
 
-Prove that Spanky TTS can operate as a selectable Android Text-to-Speech engine on the BOOX Go Color II and receive synthesis requests from NeoReader.
+Phase 1 objective has been achieved: Spanky TTS operates as a selectable Android Text-to-Speech engine on the BOOX Go Color II and successfully receives synthesis requests from NeoReader.
 
-The immediate target is:
+Verified Phase 1 flow:
 
 NeoReader
     ↓
@@ -22,7 +22,7 @@ Log incoming text
     ↓
 Return valid test audio
 
-OpenAI speech generation is deliberately being postponed until the underlying Android TTS integration is proven.
+OpenAI speech generation remains intentionally deferred until Phase 2 architecture work is defined.
 
 Current Build Status
 
@@ -139,7 +139,7 @@ SpankyTTSService registered
 
 TTS service intent filter added
 
-TTS service binding permission added
+Erroneous TTS service binding permission attempt removed; final working manifest does not rely on a TTS binding permission declaration
 
 SpankyTTSService has explicit android:exported
 
@@ -171,7 +171,7 @@ onSynthesizeText
 
 onStop
 
-Current implementation is still intentionally minimal.
+Current implementation is intentionally diagnostic and Phase 1-ready.
 
 Current Project State
 
@@ -187,7 +187,7 @@ Android Application
                 │
                 └── TextToSpeechService
 
-SpankyTTSService currently contains placeholder behavior.
+SpankyTTSService now contains working local diagnostic synthesis with thread-safe cancellation handling.
 
 No OpenAI API calls have been implemented yet.
 
@@ -199,25 +199,81 @@ No character detection has been implemented.
 
 This is intentional.
 
+Phase 1 Completion Summary
+
+Verified physical BOOX results:
+
+Spanky TTS builds and installs successfully on the BOOX.
+
+Android recognizes com.snippycalderone.spankytts/.SpankyTTSService as a real TTS engine.
+
+"Spanky TTS" appears in Android Text-to-speech output settings and can be selected.
+
+BOOX NeoReader successfully invokes SpankyTTSService.
+
+Real book text from NeoReader was captured in onSynthesizeText().
+
+PCM audio synthesis works and produces audible output.
+
+NeoReader was observed sending many relatively small text chunks.
+
+Controlled Android-vs-NeoReader test:
+
+MainActivity sent exactly ONE TextToSpeech.speak() call.
+
+The test string was exactly 493 characters.
+
+SpankyTTSService received exactly ONE SynthesisRequest.
+
+The service received the same complete 493-character string.
+
+Therefore the Android TTS framework preserves the long utterance.
+
+The previously observed small chunks originate upstream from NeoReader/its TTS integration, not from SpankyTTSService or normal Android TTS utterance splitting.
+
+Cancellation test:
+
+A temporary slow synthesis diagnostic was used to keep synthesis active.
+
+TextToSpeech.stop() caused SpankyTTSService.onStop() to execute.
+
+onStop() set the AtomicBoolean cancellation flag.
+
+The active synthesis loop detected cancellation.
+
+The cancelled request exited without callback.done().
+
+The temporary slow/10-second diagnostic behavior has since been removed.
+
+Thread-safe AtomicBoolean cancellation handling remains in the service.
+
+Normal local test synthesis is restored to approximately one second of 440 Hz PCM.
+
+Current normal diagnostic synthesis:
+
+440 Hz
+
+16 kHz
+
+PCM 16-bit
+
+mono
+
+approximately 1 second
+
+respects callback.maxBufferSize
+
+cancellation checked during synthesis and again before callback.done()
+
 Current Task
 
-The next development task is to make the Android TTS engine useful enough for physical-device testing.
+Phase 1 cleanup and verification are complete.
 
-Implement:
-
-detailed request logging
-
-valid synthesis callback behavior
-
-stop/cancel logging
-
-simple proof-of-concept audio generation
-
-engine readiness/error handling
+No code changes are required for additional Phase 1 validation at this time.
 
 Required Phase 1 Logging
 
-Each incoming synthesis request should eventually record:
+Each incoming synthesis request records:
 
 Request number
 Timestamp
@@ -245,127 +301,53 @@ SpankyTTS: onStop()
 
 The purpose of this logging is not just debugging.
 
-It is required to determine how NeoReader divides text into Android TTS requests.
+It is now used for ongoing diagnostics and for Phase 2 request-pattern analysis.
 
-Major Unknown
+Phase 1 verification already established that NeoReader sends relatively small synthesis requests, while Android preserved a controlled 493-character utterance intact.
 
-We do not yet know whether NeoReader sends:
+Therefore, the observed small chunking originates upstream from NeoReader/its TTS integration.
 
-Sentence
+Major Unknown (Phase 2)
 
-Paragraph
+How best to aggregate NeoReader's small requests into narration-quality units for OpenAI while preserving responsiveness and correctness.
 
-Page
+## Phase 1 Diagnostics Implemented
 
-or:
+- Detailed logging of each synthesis request in onSynthesizeText (sequential ID, timestamp, text, char count, locale, rate, pitch, thread)
+- Logging cancellation events in onStop
+- Local PCM test tone (440 Hz sine wave, 1 s duration, 16 kHz sample rate, 16-bit mono) returned via SynthesisCallback
+- Callback lifecycle: start(sampleRate, audioFormat, channelCount) → audioAvailable(buffer, length) chunks → done() for completed requests
+- Cancellation lifecycle: onStop() sets the AtomicBoolean cancellation flag, synthesis detects the flag and exits, and callback.done() is not called for a cancelled request
 
-Multiple paragraphs
+## Build Status
 
-This is one of the most important Phase 1 discoveries.
+- Project builds successfully with `.\gradlew.bat assembleDebug` after changes
 
-The result will strongly affect:
+## Next Phase
 
-context buffering
+Phase 2 begins with architecture design for the bridge between NeoReader request patterns and OpenAI speech generation.
 
-narration prompting
+Phase 2 architecture topics to define:
 
-latency strategy
+request aggregation/buffering
 
-caching
+reconstructing useful sentence/paragraph-sized narration units
 
-scene analysis
+latency versus context tradeoffs
 
-future character awareness
+handling NeoReader prefetch/queued requests
 
-Next Major Milestone
+cancellation with buffered/in-flight requests
 
-BOOX Physical-Device Test
+avoiding one OpenAI API call for every tiny NeoReader phrase
 
-Planned flow:
+maintaining natural narration continuity
 
-Build APK
-    ↓
-Connect BOOX with ADB
-    ↓
-Install app-debug.apk
-    ↓
-Open Android TTS settings
-    ↓
-Verify Spanky TTS appears
-    ↓
-Select Spanky TTS
-    ↓
-Open NeoReader
-    ↓
-Start TTS
-    ↓
-Inspect logcat
+determining when buffered text is ready to send to OpenAI
 
-Useful ADB commands will likely include:
+Do not implement this phase yet; design and validation planning come first.
 
-adb devices
-
-and:
-
-adb logcat
-
-Eventually filtered logging may use something like:
-
-adb logcat | findstr SpankyTTS
-
-Phase 1 Acceptance Criteria
-
-Phase 1 is complete only when:
-
-APK installs successfully on BOOX
-
-Android recognizes Spanky TTS as a TTS engine
-
-Spanky TTS appears in Android TTS settings
-
-Spanky TTS can be selected as preferred engine
-
-NeoReader recognizes the engine
-
-NeoReader calls onSynthesizeText
-
-Incoming NeoReader text appears in logs
-
-Request chunk size is understood
-
-Valid audio is returned
-
-Speech is audible
-
-onStop responds correctly
-
-No crashes occur during basic reading
-
-No API credentials are present in source control
-
-Phase 2 — OpenAI Speech Integration
-
-Do not begin until the Phase 1 Android integration is verified.
-
-Planned features:
-
-OpenAI API client
-
-gpt-4o-mini-tts
-
-API key settings
-
-voice selector
-
-narration instructions
-
-playback speed
-
-Test Voice button
-
-PCM response handling
-
-streaming through SynthesisCallback
+Phase 2 — OpenAI Speech Integration (after bridge design)
 
 Target architecture:
 
@@ -472,9 +454,7 @@ Current Blockers
 
 None.
 
-The project currently builds successfully.
-
-The next work is functional Android TTS implementation and physical BOOX testing.
+Phase 1 objectives are complete and verified.
 
 Known Good Toolchain
 
@@ -508,8 +488,4 @@ BUILD SUCCESSFUL
 
 Next Action
 
-Implement request logging and simple synthesis behavior in:
-
-app/src/main/java/com/snippycalderone/spankytts/SpankyTTSService.kt
-
-Then rebuild and prepare the first APK for physical BOOX testing.
+Define and review the Phase 2 request-aggregation bridge design before implementing OpenAI speech calls for NeoReader playback.
