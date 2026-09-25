@@ -34,3 +34,11 @@ google-services.json
 
 # Android Profiling
 *.hprof
+
+# Backend local files
+backend/.env
+backend/.venv/
+backend/*.pcm
+backend/*.wav
+backend/**/__pycache__/
+backend/**/*.pyc

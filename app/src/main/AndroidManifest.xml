@@ -1,6 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <application android:label="Spanky TTS" android:theme="@style/Theme.SpankyTTS">
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:label="Spanky TTS"
+        android:theme="@style/Theme.SpankyTTS"
+        android:usesCleartextTraffic="true">
+        <!-- TEMPORARY: Phase 2B.1 LAN development backend uses HTTP; production/cloud must use HTTPS. -->
 
         <service
             android:name=".SpankyTTSService"
