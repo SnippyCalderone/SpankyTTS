@@ -1,5 +1,7 @@
 package com.snippycalderone.spankytts
 
+import com.snippycalderone.spankytts.anchor.AnchorStorage
+import com.snippycalderone.spankytts.anchor.TextAnchorMatcher
 import android.speech.tts.SynthesisCallback
 import android.speech.tts.SynthesisRequest
 import android.speech.tts.TextToSpeech
@@ -19,6 +21,16 @@ class SpankyTTSService : TextToSpeechService() {
     // New fields for request tracking and cancellation
     private val requestCounter = AtomicInteger(0)
     private val isCancelled = AtomicBoolean(false)
+    private val matcherLock = Any()
+
+    @Volatile
+    private var cachedIndexPath: String? = null
+
+    @Volatile
+    private var anchorMatcher: TextAnchorMatcher? = null
+
+    @Volatile
+    private var cachedAnchorResetVersion: Int = -1
 
     override fun onIsLanguageAvailable(
         lang: String?,
@@ -45,7 +57,7 @@ class SpankyTTSService : TextToSpeechService() {
         isCancelled.set(false)
         val seq = requestCounter.incrementAndGet()
         val timestamp = System.currentTimeMillis()
-        val text = request.text.toString()
+        val text = request.charSequenceText?.toString().orEmpty()
         val charCount = text.length
         val language = request.language ?: ""
         val country = request.country ?: ""
@@ -56,6 +68,22 @@ class SpankyTTSService : TextToSpeechService() {
         Log.i(TAG, "Text ($charCount chars): $text")
         Log.i(TAG, "Locale: $language-$country-$variant, rate=$rate, pitch=$pitch")
         Log.i(TAG, "Thread: ${Thread.currentThread().name}")
+
+        try {
+            synchronized(matcherLock) {
+                val matcher = getAnchorMatcherOrNull()
+                if (matcher == null) {
+                    Log.i(TAG, "ANCHOR: no active EPUB index")
+                } else {
+                    val anchorLogs = matcher.processIncomingText(text)
+                    for (line in anchorLogs) {
+                        Log.i(TAG, line)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "ANCHOR: matcher failure", e)
+        }
         try {
             val sampleRate = 16000
             val audioFormat = AudioFormat.ENCODING_PCM_16BIT
@@ -113,5 +141,46 @@ class SpankyTTSService : TextToSpeechService() {
     override fun onStop() {
         Log.i(TAG, "onStop() called - cancellation requested on thread ${Thread.currentThread().name}")
         isCancelled.set(true)
+    }
+
+    private fun getAnchorMatcherOrNull(): TextAnchorMatcher? {
+        val configuredPath = AnchorStorage.getActiveIndexPath(this)
+        val resetVersion = AnchorStorage.getAnchorResetVersion(this)
+        if (configuredPath.isNullOrBlank()) {
+            synchronized(matcherLock) {
+                cachedIndexPath = null
+                anchorMatcher = null
+                cachedAnchorResetVersion = resetVersion
+            }
+            return null
+        }
+
+        synchronized(matcherLock) {
+            if (anchorMatcher != null && cachedAnchorResetVersion != resetVersion) {
+                anchorMatcher?.clearAnchor()
+                cachedAnchorResetVersion = resetVersion
+                Log.i(TAG, "ANCHOR: state reset requested")
+            }
+
+            if (configuredPath == cachedIndexPath && anchorMatcher != null) {
+                return anchorMatcher
+            }
+
+            val bookIndex = AnchorStorage.loadIndex(configuredPath)
+            if (bookIndex == null) {
+                cachedIndexPath = configuredPath
+                anchorMatcher = null
+                cachedAnchorResetVersion = resetVersion
+                Log.w(TAG, "ANCHOR: failed to load index at $configuredPath")
+                return null
+            }
+
+            val matcher = TextAnchorMatcher(bookIndex)
+            cachedIndexPath = configuredPath
+            anchorMatcher = matcher
+            cachedAnchorResetVersion = resetVersion
+            Log.i(TAG, "ANCHOR: loaded index source=${bookIndex.sourceFilename} sections=${bookIndex.sections.size}")
+            return matcher
+        }
     }
 }

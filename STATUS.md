@@ -1,5 +1,56 @@
 Spanky TTS — Development Status
 
+Phase 2A Checkpoint (Latest)
+
+Current Phase
+
+Phase 2A COMPLETE — Live EPUB Text Anchoring
+
+Phase 2A Verified Physical Results (BOOX)
+
+- Spanky TTS is selectable and callable from BOOX NeoReader.
+- Controlled Android test proved Android preserves a 493-character utterance; NeoReader performs upstream chunking.
+- Cancellation/onStop behavior was physically verified.
+- EPUB importing/indexing works.
+- EPUB indexing uses META-INF/container.xml -> OPF manifest/spine reading order.
+- Latest spine validation:
+    - package=content.opf
+    - spine items=30
+    - indexed spine sections=30
+    - fallback=false
+- Text normalization and initial anchoring were physically verified.
+- Long and short NeoReader chunks track against the EPUB.
+- Short ambiguous chunks conservatively retain state instead of guessing.
+- Same-section jumps/recovery were verified.
+- Cross-section/global recovery was verified.
+- Cross-section re-anchor now uses a pending candidate that requires confirmation from the next request.
+- Physical confirmation example:
+    - candidate created for chapter_02.html at 139-211
+    - following request matched 212-252
+    - candidate promoted with ANCHOR REANCHOR CONFIRMED
+    - subsequent requests tracked normally
+- Service/matcher may be recreated between stopped NeoReader TTS sessions; fresh matcher establishment was physically verified to recover quickly from incoming text.
+
+BOOX Settings Used During Validation
+
+- Auto-start: ON
+- Freeze: OFF
+- Pause app activity if unused: OFF
+- Stay active in background: Unlimited
+
+Known Phase 2A Limitation
+
+- Extremely short/common requests can remain ambiguous and intentionally may not receive an exact individual source range.
+- The next distinctive request normally catches the cursor up.
+- This is conservative behavior, not a matcher failure.
+- Phase 2B audio/cache design must account for this.
+
+Phase 2A Scope Boundaries
+
+- No OpenAI synthesis integration yet.
+- No network TTS path enabled.
+- No audio caching/database integration yet.
+
 Current Phase
 
 Phase 1 COMPLETE — Android TTS Proof of Concept
