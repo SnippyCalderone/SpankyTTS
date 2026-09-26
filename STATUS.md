@@ -1,542 +1,519 @@
-Spanky TTS — Development Status
+# Spanky TTS — Development Status
 
-Phase 2A Checkpoint (Latest)
+**Last updated:** 2026-09-25
 
-Current Phase
+## Current Phase
 
-Phase 2A COMPLETE — Live EPUB Text Anchoring
+**Phase 2B.1 COMPLETE — Live OpenAI TTS transport on the physical BOOX**
 
-Phase 2A Verified Physical Results (BOOX)
+The project has now proven the full end-to-end path from BOOX NeoReader to the local FastAPI backend, through OpenAI `gpt-4o-mini-tts`, and back to Android as raw PCM audio.
 
-- Spanky TTS is selectable and callable from BOOX NeoReader.
-- Controlled Android test proved Android preserves a 493-character utterance; NeoReader performs upstream chunking.
-- Cancellation/onStop behavior was physically verified.
-- EPUB importing/indexing works.
-- EPUB indexing uses META-INF/container.xml -> OPF manifest/spine reading order.
-- Latest spine validation:
-    - package=content.opf
-    - spine items=30
-    - indexed spine sections=30
-    - fallback=false
-- Text normalization and initial anchoring were physically verified.
-- Long and short NeoReader chunks track against the EPUB.
-- Short ambiguous chunks conservatively retain state instead of guessing.
-- Same-section jumps/recovery were verified.
-- Cross-section/global recovery was verified.
-- Cross-section re-anchor now uses a pending candidate that requires confirmation from the next request.
-- Physical confirmation example:
-    - candidate created for chapter_02.html at 139-211
-    - following request matched 212-252
-    - candidate promoted with ANCHOR REANCHOR CONFIRMED
-    - subsequent requests tracked normally
-- Service/matcher may be recreated between stopped NeoReader TTS sessions; fresh matcher establishment was physically verified to recover quickly from incoming text.
+The next active milestone is:
 
-BOOX Settings Used During Validation
+**Phase 2B.2A — Narration Continuity / Context-Aware Delivery**
 
-- Auto-start: ON
-- Freeze: OFF
-- Pause app activity if unused: OFF
-- Stay active in background: Unlimited
+The immediate goal is to improve tone, cadence, and continuity across NeoReader's small synthesis chunks without changing the exact text NeoReader asks Spanky TTS to speak.
 
-Known Phase 2A Limitation
+---
 
-- Extremely short/common requests can remain ambiguous and intentionally may not receive an exact individual source range.
-- The next distinctive request normally catches the cursor up.
-- This is conservative behavior, not a matcher failure.
-- Phase 2B audio/cache design must account for this.
+## Current Known-Good Architecture
 
-Phase 2A Scope Boundaries
-
-- No OpenAI synthesis integration yet.
-- No network TTS path enabled.
-- No audio caching/database integration yet.
-
-Current Phase
-
-Phase 1 COMPLETE — Android TTS Proof of Concept
-
-Current Objective
-
-Phase 1 objective has been achieved: Spanky TTS operates as a selectable Android Text-to-Speech engine on the BOOX Go Color II and successfully receives synthesis requests from NeoReader.
-
-Verified Phase 1 flow:
-
-NeoReader
-    ↓
-Android TTS Framework
-    ↓
-Spanky TTS
-    ↓
-Receive synthesis request
-    ↓
-Log incoming text
-    ↓
-Return valid test audio
-
-OpenAI speech generation remains intentionally deferred until Phase 2 architecture work is defined.
-
-Current Build Status
-
-BUILD SUCCESSFUL
-
-Known-good command:
-
-.\gradlew.bat assembleDebug
-
-Generated APK:
-
-app\build\outputs\apk\debug\app-debug.apk
-
-Completed Milestones
-
-Repository / Documentation
-
-GitHub repository created
-
-Repository cloned locally
-
-PROJECT_CONTEXT.md created
-
-STATUS.md created
-
-README.md established
-
-.gitignore configured
-
-Development Environment
-
-Windows development environment configured
-
-Visual Studio Code selected as primary editor
-
-Android Studio installed for SDK management
-
-JDK 17 installed
-
-JAVA_HOME configured
-
-Android SDK installed
-
-ANDROID_HOME configured
-
-ANDROID_SDK_ROOT configured
-
-Android SDK Platform-Tools installed
-
-Android SDK Command-line Tools installed
-
-sdkmanager verified
-
-Official Android SDK adb verified
-
-Obsolete Touch Portal ADB installation removed
-
-Gradle Setup
-
-Android project scaffolded
-
-Package established as com.snippycalderone.spankytts
-
-Android Gradle Plugin configured
-
-Gradle 8.2.1 selected
-
-Project-local Gradle Wrapper generated
-
-gradlew created
-
-gradlew.bat created
-
-gradle-wrapper.jar generated
-
-gradle-wrapper.properties generated
-
-Global Gradle dependency avoided
-
-Temporary bootstrap Gradle distribution removed/ignored
-
-Android SDK / Build Configuration
-
-Android SDK path configured through local.properties
-
-local.properties ignored by Git
-
-AndroidX enabled
-
-Current gradle.properties includes:
-
-android.useAndroidX=true
-android.enableJetifier=true
-
-Google Maven repository added
-
-Maven Central added
-
-Gradle Plugin Portal added
-
-Dependency repositories configured correctly
-
-Android Manifest
-
-Obsolete manifest package= declaration removed
-
-Application namespace moved to Gradle configuration
-
-MainActivity configured
-
-MainActivity has explicit android:exported
-
-SpankyTTSService registered
-
-TTS service intent filter added
-
-Erroneous TTS service binding permission attempt removed; final working manifest does not rely on a TTS binding permission declaration
-
-SpankyTTSService has explicit android:exported
-
-TTS engine metadata resource configured
-
-TTS Engine Metadata
-
-tts_engine.xml created
-
-Invalid android:defaultLocale configuration removed
-
-XML validated successfully
-
-Kotlin TTS Service
-
-SpankyTTSService.kt currently extends:
-
-TextToSpeechService
-
-Required Android service methods now compile:
-
-onIsLanguageAvailable
-
-onLoadLanguage
-
-onGetLanguage
-
-onSynthesizeText
-
-onStop
-
-Current implementation is intentionally diagnostic and Phase 1-ready.
-
-Current Project State
-
-The project now compiles successfully from the command line.
-
-Current architecture:
-
-Android Application
-        │
-        ├── MainActivity
-        │
-        └── SpankyTTSService
-                │
-                └── TextToSpeechService
-
-SpankyTTSService now contains working local diagnostic synthesis with thread-safe cancellation handling.
-
-No OpenAI API calls have been implemented yet.
-
-No narration caching has been implemented.
-
-No contextual narration has been implemented.
-
-No character detection has been implemented.
-
-This is intentional.
-
-Phase 1 Completion Summary
-
-Verified physical BOOX results:
-
-Spanky TTS builds and installs successfully on the BOOX.
-
-Android recognizes com.snippycalderone.spankytts/.SpankyTTSService as a real TTS engine.
-
-"Spanky TTS" appears in Android Text-to-speech output settings and can be selected.
-
-BOOX NeoReader successfully invokes SpankyTTSService.
-
-Real book text from NeoReader was captured in onSynthesizeText().
-
-PCM audio synthesis works and produces audible output.
-
-NeoReader was observed sending many relatively small text chunks.
-
-Controlled Android-vs-NeoReader test:
-
-MainActivity sent exactly ONE TextToSpeech.speak() call.
-
-The test string was exactly 493 characters.
-
-SpankyTTSService received exactly ONE SynthesisRequest.
-
-The service received the same complete 493-character string.
-
-Therefore the Android TTS framework preserves the long utterance.
-
-The previously observed small chunks originate upstream from NeoReader/its TTS integration, not from SpankyTTSService or normal Android TTS utterance splitting.
-
-Cancellation test:
-
-A temporary slow synthesis diagnostic was used to keep synthesis active.
-
-TextToSpeech.stop() caused SpankyTTSService.onStop() to execute.
-
-onStop() set the AtomicBoolean cancellation flag.
-
-The active synthesis loop detected cancellation.
-
-The cancelled request exited without callback.done().
-
-The temporary slow/10-second diagnostic behavior has since been removed.
-
-Thread-safe AtomicBoolean cancellation handling remains in the service.
-
-Normal local test synthesis is restored to approximately one second of 440 Hz PCM.
-
-Current normal diagnostic synthesis:
-
-440 Hz
-
-16 kHz
-
-PCM 16-bit
-
-mono
-
-approximately 1 second
-
-respects callback.maxBufferSize
-
-cancellation checked during synthesis and again before callback.done()
-
-Current Task
-
-Phase 1 cleanup and verification are complete.
-
-No code changes are required for additional Phase 1 validation at this time.
-
-Required Phase 1 Logging
-
-Each incoming synthesis request records:
-
-Request number
-Timestamp
-Character count
-Locale
-Speech rate
-Pitch
-Incoming text
-
-Example:
-
-SpankyTTS: SYNTHESIS REQUEST #14
-
-Characters: 183
-Locale: en-US
-Speech Rate: 1.0
-Pitch: 1.0
-
-Text:
-"The room was completely silent..."
-
-Cancellation should also log:
-
-SpankyTTS: onStop()
-
-The purpose of this logging is not just debugging.
-
-It is now used for ongoing diagnostics and for Phase 2 request-pattern analysis.
-
-Phase 1 verification already established that NeoReader sends relatively small synthesis requests, while Android preserved a controlled 493-character utterance intact.
-
-Therefore, the observed small chunking originates upstream from NeoReader/its TTS integration.
-
-Major Unknown (Phase 2)
-
-How best to aggregate NeoReader's small requests into narration-quality units for OpenAI while preserving responsiveness and correctness.
-
-## Phase 1 Diagnostics Implemented
-
-- Detailed logging of each synthesis request in onSynthesizeText (sequential ID, timestamp, text, char count, locale, rate, pitch, thread)
-- Logging cancellation events in onStop
-- Local PCM test tone (440 Hz sine wave, 1 s duration, 16 kHz sample rate, 16-bit mono) returned via SynthesisCallback
-- Callback lifecycle: start(sampleRate, audioFormat, channelCount) → audioAvailable(buffer, length) chunks → done() for completed requests
-- Cancellation lifecycle: onStop() sets the AtomicBoolean cancellation flag, synthesis detects the flag and exits, and callback.done() is not called for a cancelled request
-
-## Build Status
-
-- Project builds successfully with `.\gradlew.bat assembleDebug` after changes
-
-## Next Phase
-
-Phase 2 begins with architecture design for the bridge between NeoReader request patterns and OpenAI speech generation.
-
-Phase 2 architecture topics to define:
-
-request aggregation/buffering
-
-reconstructing useful sentence/paragraph-sized narration units
-
-latency versus context tradeoffs
-
-handling NeoReader prefetch/queued requests
-
-cancellation with buffered/in-flight requests
-
-avoiding one OpenAI API call for every tiny NeoReader phrase
-
-maintaining natural narration continuity
-
-determining when buffered text is ready to send to OpenAI
-
-Do not implement this phase yet; design and validation planning come first.
-
-Phase 2 — OpenAI Speech Integration (after bridge design)
-
-Target architecture:
-
-NeoReader
-    ↓
+```text
+BOOX NeoReader
+      ↓
+Android Text-to-Speech Framework
+      ↓
 SpankyTTSService
-    ↓
-OpenAI Speech API
-    ↓
-PCM Stream
-    ↓
-SynthesisCallback
-    ↓
-NeoReader Playback
+      ↓
+Phase 2A EPUB anchor/matcher
+      ↓
+HTTP POST /tts
+      ↓
+FastAPI backend on development PC
+      ↓
+OpenAI gpt-4o-mini-tts
+      ↓
+Raw PCM 24 kHz / 16-bit / mono
+      ↓
+Android SynthesisCallback
+      ↓
+NeoReader playback on BOOX
+```
 
-Phase 3 — Usability
+Current development backend:
 
-Potential work:
+```text
+http://<development-pc-ip>:8000
+```
 
-narration presets
+This LAN URL and cleartext HTTP configuration are temporary development settings.
 
-improved settings UI
+---
 
-voice previews
+## Phase 1 — COMPLETE
 
-better error handling
+### Android TTS Proof of Concept
 
-network state handling
+Verified on the physical BOOX Go Color II:
 
-retry behavior
+- Spanky TTS installs successfully.
+- Android recognizes Spanky TTS as a selectable TTS engine.
+- BOOX NeoReader invokes `SpankyTTSService`.
+- Real NeoReader book text reaches `onSynthesizeText()`.
+- Valid PCM audio can be returned through `SynthesisCallback`.
+- `onStop()` cancellation works.
+- A controlled Android test sends exactly one 493-character `TextToSpeech.speak()` call.
+- Spanky receives exactly one 493-character `SynthesisRequest`.
+- Therefore Android itself preserves the long utterance.
+- NeoReader is the component that performs the observed upstream chunking.
 
-configurable buffering
+The original 440 Hz diagnostic tone was useful for Phase 1 but has now been replaced by real backend-generated speech.
 
-API usage information
+---
 
-Phase 4 — Local Audio Cache
+## Phase 2A — COMPLETE
 
-Goals:
+### Live EPUB Text Anchoring
 
-avoid repeated API charges
+Spanky can import an EPUB and use the incoming NeoReader text itself as a position anchor.
 
-improve replay speed
+### EPUB indexing
 
-cache identical synthesis requests
+The indexer now follows EPUB reading order using:
 
-invalidate cache when relevant voice/settings change
-
-Potential cache identity:
-
-text
-+
-provider
-+
-model
-+
-voice
-+
-instructions
-+
-speech settings
-
-Phase 5 — Context Awareness
-
-Potential rolling context:
-
-Previous request
-Previous request
-Current request
+```text
+META-INF/container.xml
         ↓
-Narration analysis
+OPF package
         ↓
-Speak current request only
+manifest
+        ↓
+spine
+        ↓
+readable XHTML/HTML sections
+```
 
-Previous text must never accidentally be synthesized again.
+Latest validation fixture:
 
-Phase 6 — AI Narration Director
+```text
+The Reptile Room
+package=content.opf
+spine items=30
+indexed spine sections=30
+fallback=false
+```
 
-Potential future analysis:
+If package/spine parsing cannot produce a usable index, the indexer falls back to a broad HTML/XHTML scan rather than failing the import.
 
-Mood
-Pacing
-Energy
-Emotion
-Dialogue intensity
-Pause behavior
+### Matcher behavior
 
-The director should generate narration instructions while preserving the original book text.
+Verified behavior includes:
 
-Phase 7 — Character Awareness
+- Initial global anchor establishment from distinctive incoming text.
+- Rolling cursor tracking after establishment.
+- Short-chunk tracking near the current cursor.
+- Conservative handling of ambiguous short/common fragments.
+- Same-section forward jump recovery.
+- Cross-section/global re-anchor recovery.
+- Pending cross-section re-anchor candidates that require confirmation from the following request before changing active section.
+- Fresh re-establishment if the Android service/process is recreated.
 
-Experimental future goal:
+### Known Phase 2A limitation
 
-identify recurring speakers
+Extremely short or repeated text can still be ambiguous.
 
-maintain consistent character delivery
+In those cases the matcher intentionally avoids guessing. A following distinctive request normally catches the cursor up.
 
-avoid random voice switching
+This is acceptable for position tracking, but it matters for future audio caching/alignment work where every exact request range may eventually need deterministic mapping.
 
-distinguish narration from dialogue
+---
 
-This phase remains speculative until NeoReader request behavior is known.
+## Phase 2B.1 — COMPLETE
 
-Current Blockers
+### FastAPI backend foundation
 
-None.
+A Python backend now exists under:
 
-Phase 1 objectives are complete and verified.
+```text
+backend/
+```
 
-Known Good Toolchain
+Implemented endpoints:
 
-OS:
-Windows 11
+```text
+GET /health
+POST /tts
+```
 
-JDK:
-17
+`GET /health` works without an OpenAI key.
 
-Gradle:
-8.2.1
+`POST /tts`:
 
-Android Gradle Plugin:
-8.1.0
+- accepts text
+- accepts a voice
+- accepts narration instructions
+- uses fixed model `gpt-4o-mini-tts`
+- requests raw PCM
+- returns binary PCM directly
+- does not use base64
 
-Language:
-Kotlin
+Expected successful audio contract:
 
-Package:
-com.snippycalderone.spankytts
+```text
+Content-Type: application/octet-stream
+X-Audio-Sample-Rate: 24000
+X-Audio-Encoding: pcm_s16le
+X-Audio-Channels: 1
+```
 
-Last Known Good Build
+Validation/error behavior includes:
 
-Command:
+- missing API key → controlled HTTP 503
+- blank text → HTTP 400
+- text over 5000 characters → HTTP 413
+- OpenAI failure → sanitized HTTP 502
+- no API key or authorization secret is logged
 
+### OpenAI key handling
+
+The OpenAI API key exists only in:
+
+```text
+backend/.env
+```
+
+The tracked template is:
+
+```text
+backend/.env.example
+```
+
+The Android app does **not** contain or transmit the OpenAI API key.
+
+Git ignore rules cover local secrets/artifacts including:
+
+```text
+backend/.env
+backend/.venv/
+backend/*.pcm
+backend/*.wav
+backend/**/__pycache__/
+backend/**/*.pyc
+```
+
+### BOOX → backend LAN connectivity
+
+Physically verified from the BOOX browser:
+
+```text
+http://<development-pc-ip>:8000/health
+```
+
+returned HTTP 200.
+
+Development networking currently uses:
+
+- Uvicorn bound to `0.0.0.0:8000`
+- Windows home network profile set to Private
+- inbound TCP 8000 allowed on the Private firewall profile
+- Android cleartext HTTP temporarily enabled for LAN development
+
+### Android backend integration
+
+`SpankyTTSService` now sends one backend request for each Android/NeoReader synthesis request.
+
+Current request shape:
+
+```json
+{
+  "text": "<exact incoming synthesis request text>",
+  "voice": "cedar",
+  "instructions": "Read naturally as a professional audiobook narrator. Use natural pacing and expressive but restrained delivery."
+}
+```
+
+The service:
+
+- preserves Phase 2A anchor processing
+- posts to the development backend
+- validates the backend response
+- starts `SynthesisCallback` at 24 kHz PCM16 mono
+- splits PCM into chunks no larger than `callback.maxBufferSize`
+- checks cancellation while delivering audio
+- calls `done()` only after successful non-cancelled delivery
+- uses `callback.error()` for real failures
+- does not fall back to the old test tone
+
+### Physical Phase 2B.1 results
+
+Verified on the BOOX:
+
+#### Controlled 493-character test
+
+- Real OpenAI-generated speech played through the BOOX.
+- The full controlled paragraph completed successfully.
+- The backend returned valid raw PCM.
+- Android callback delivery completed successfully.
+
+A repeated controlled test was cancelled during playback and:
+
+- `onStop()` fired
+- cancellation state was set
+- PCM delivery stopped
+- the request did not continue to normal completion
+
+#### NeoReader live book test
+
+The Reptile Room was re-imported and NeoReader TTS was started directly at Chapter 5.
+
+Verified:
+
+- Chapter heading went through real backend TTS.
+- First distinctive sentence established the Chapter 5 EPUB anchor.
+- Subsequent chunks tracked normally.
+- Every tested NeoReader chunk was sent to the backend and returned real OpenAI PCM.
+- Speech was audible in NeoReader.
+- Stopping NeoReader TTS while a request was in flight cancelled the active backend call cleanly.
+
+### Observed latency
+
+The controlled 493-character backend generations took several seconds.
+
+During the live NeoReader run, small chunks commonly completed in roughly:
+
+```text
+~0.7–1.8 seconds
+```
+
+with occasional slower requests around:
+
+```text
+~2.8 seconds
+```
+
+This is now a quality/latency optimization problem, not a transport or compatibility problem.
+
+---
+
+## Current Quality Limitation
+
+NeoReader sends many relatively small fragments, including text such as:
+
+```text
+"And of course,"
+```
+
+Phase 2B.1 intentionally treats each incoming fragment as its own independent OpenAI speech request.
+
+That produces correct speech, but the model lacks the surrounding sentence/scene context when performing each chunk.
+
+Observed effects:
+
+- small pauses between some fragments
+- cadence resets at request boundaries
+- commas can sound too final
+- tone can vary more than desired
+- each fragment incurs its own generation latency
+
+This behavior is expected from the current one-request/one-generation prototype.
+
+---
+
+## Phase 2B.2A — NEXT
+
+### Narration Continuity / Context-Aware Delivery
+
+Goal:
+
+> Give the speech model enough surrounding EPUB context to perform the **current NeoReader chunk** naturally, while ensuring that only the current requested text is spoken.
+
+Conceptually:
+
+```text
+Previous EPUB context
+Current NeoReader request
+Following EPUB context
+        ↓
+Narration-aware instructions/context
+        ↓
+OpenAI TTS
+        ↓
+Speak ONLY current NeoReader request
+```
+
+Immediate design questions:
+
+1. What amount of prior/following EPUB context should be supplied?
+2. Should Android send raw surrounding text to the backend, anchor metadata, or both?
+3. How should the backend clearly separate context from text-to-speak?
+4. How do we guarantee surrounding context is never spoken?
+5. How much does context improve cadence on short fragments?
+6. What latency/cost change does context introduce?
+
+### First validation target
+
+Use known awkward fragments such as:
+
+```text
+"And of course,"
+```
+
+and compare:
+
+- Phase 2B.1 isolated delivery
+- Phase 2B.2A context-aware delivery
+
+Success means the fragment sounds like part of the surrounding sentence rather than a standalone utterance.
+
+---
+
+## Phase 2B.2B — LATER
+
+### Latency / Prefetch / Cache / Alignment
+
+After contextual delivery is proven, address generation gaps.
+
+Likely topics:
+
+- pre-generation
+- look-ahead/prefetch
+- local audio caching
+- deterministic cache keys
+- exact request-to-audio mapping
+- larger natural generation units
+- forced alignment or timestamp-based audio slicing if larger clips are generated
+
+Important constraint:
+
+A larger pre-generated paragraph cannot simply be returned for a smaller NeoReader request. Android/NeoReader still expects audio corresponding to the current synthesis request.
+
+Larger cached clips therefore require either:
+
+- generation at compatible request granularity, or
+- accurate text/audio alignment and slicing
+
+Do not hide this constraint with naive request aggregation.
+
+---
+
+## BOOX Settings Used During Validation
+
+```text
+Auto-start: ON
+Freeze: OFF
+Pause app activity if unused: OFF
+Stay active in background: Unlimited
+```
+
+These settings helped keep the custom TTS service available during NeoReader testing.
+
+---
+
+## Known-Good Commands
+
+### Android build
+
+```powershell
 .\gradlew.bat assembleDebug
+```
 
-Result:
+Expected:
 
+```text
 BUILD SUCCESSFUL
+```
 
-Next Action
+APK:
 
-Define and review the Phase 2 request-aggregation bridge design before implementing OpenAI speech calls for NeoReader playback.
+```text
+app\build\outputs\apk\debug\app-debug.apk
+```
+
+### Install / replace APK
+
+```powershell
+adb devices
+adb install -r app\build\outputs\apk\debug\app-debug.apk
+```
+
+### Logcat
+
+```powershell
+adb logcat -c
+adb logcat SpankyTTS:I AndroidRuntime:E *:S
+```
+
+Saved diagnostic log:
+
+```powershell
+adb logcat SpankyTTS:I AndroidRuntime:E *:S | Tee-Object -FilePath phase2_tts_live.txt
+```
+
+### Backend setup
+
+```powershell
+backend\.venv\Scripts\Activate.ps1
+uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
+```
+
+### Health check
+
+```powershell
+Invoke-RestMethod http://<development-pc-ip>:8000/health
+```
+
+---
+
+## Known-Good Toolchain
+
+```text
+OS: Windows 11
+JDK: 17
+Gradle: 8.2.1
+Android Gradle Plugin: 8.1.0
+Language: Kotlin
+Android package: com.snippycalderone.spankytts
+Backend: Python / FastAPI / Uvicorn
+Speech model: gpt-4o-mini-tts
+Android HTTP client: OkHttp 4.11.0
+```
+
+---
+
+## Repository Checkpoint
+
+The Phase 2B.1 implementation has been committed and pushed.
+
+Current checkpoint includes:
+
+- Phase 2A EPUB anchoring
+- spine-aware EPUB indexing
+- conservative re-anchor confirmation
+- FastAPI backend
+- secure local API-key handling
+- OpenAI PCM generation
+- BOOX LAN connectivity
+- Android backend integration
+- real NeoReader OpenAI narration
+- cancellation support
+
+---
+
+## Current Blockers
+
+None preventing continued development.
+
+The fundamental end-to-end architecture is proven.
+
+---
+
+## Next Action
+
+Design and implement **Phase 2B.2A — context-aware narration continuity** without breaking:
+
+- Phase 2A anchoring
+- exact current-request speech
+- Android TTS callback lifecycle
+- cancellation
+- backend key isolation
+- current successful BOOX transport
