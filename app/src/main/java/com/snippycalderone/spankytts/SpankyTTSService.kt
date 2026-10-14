@@ -1,6 +1,8 @@
 package com.snippycalderone.spankytts
 
 import com.snippycalderone.spankytts.anchor.AnchorStorage
+import com.snippycalderone.spankytts.anchor.NarrationContext
+import com.snippycalderone.spankytts.anchor.NarrationContextExtractor
 import com.snippycalderone.spankytts.anchor.TextAnchorMatcher
 import android.speech.tts.SynthesisCallback
 import android.speech.tts.SynthesisRequest
@@ -58,6 +60,9 @@ class SpankyTTSService : TextToSpeechService() {
     private var anchorMatcher: TextAnchorMatcher? = null
 
     @Volatile
+    private var contextExtractor: NarrationContextExtractor? = null
+
+    @Volatile
     private var cachedAnchorResetVersion: Int = -1
 
     override fun onIsLanguageAvailable(
@@ -98,27 +103,34 @@ class SpankyTTSService : TextToSpeechService() {
         Log.i(TAG, "Locale: $language-$country-$variant, rate=$rate, pitch=$pitch")
         Log.i(TAG, "Thread: ${Thread.currentThread().name}")
 
+        var narrationContext: NarrationContext? = null
         try {
             synchronized(matcherLock) {
                 val matcher = getAnchorMatcherOrNull()
                 if (matcher == null) {
                     Log.i(TAG, "ANCHOR: no active EPUB index")
                 } else {
-                    val anchorLogs = matcher.processIncomingText(text)
-                    for (line in anchorLogs) {
+                    val anchorResult = matcher.processIncomingText(text)
+                    for (line in anchorResult.logs) {
                         Log.i(TAG, line)
                     }
+                    narrationContext = anchorResult.reliableCurrentMatch?.let { contextExtractor?.extract(it) }
                 }
             }
         } catch (e: Exception) {
             Log.e(TAG, "ANCHOR: matcher failure", e)
         }
+        Log.i(
+            TAG,
+            "NARRATION CONTEXT: previous=${narrationContext?.previous?.length ?: 0} following=${narrationContext?.following?.length ?: 0}"
+        )
 
         if (isCancelled.get()) {
             Log.i(TAG, "BACKEND TTS: cancelled before request #$seq backend call")
             return
         }
 
+        var activeCall: Call? = null
         try {
             val startMs = System.currentTimeMillis()
             Log.i(TAG, "BACKEND TTS: request chars=$charCount")
@@ -127,6 +139,10 @@ class SpankyTTSService : TextToSpeechService() {
                 .put("text", text)
                 .put("voice", REQUEST_VOICE)
                 .put("instructions", REQUEST_INSTRUCTIONS)
+            narrationContext?.let { context ->
+                if (context.previous.isNotEmpty()) requestJson.put("previous_context", context.previous)
+                if (context.following.isNotEmpty()) requestJson.put("following_context", context.following)
+            }
 
             val httpRequest = Request.Builder()
                 .url(DEV_BACKEND_TTS_URL)
@@ -134,12 +150,21 @@ class SpankyTTSService : TextToSpeechService() {
                 .build()
 
             val call = httpClient.newCall(httpRequest)
+            activeCall = call
             setCurrentCall(call)
+            if (isCancelled.get()) {
+                call.cancel()
+                Log.i(TAG, "BACKEND TTS: cancelled before request #$seq backend call")
+                return
+            }
 
             val response = call.execute()
-            clearCurrentCallIf(call)
 
             response.use { httpResponse ->
+                if (isCancelled.get()) {
+                    Log.i(TAG, "BACKEND TTS: cancelled after response for request #$seq")
+                    return
+                }
                 val elapsedMs = System.currentTimeMillis() - startMs
                 Log.i(TAG, "BACKEND TTS: response status=${httpResponse.code}")
                 Log.i(TAG, "BACKEND TTS: generation/network elapsed=${elapsedMs}ms")
@@ -260,10 +285,14 @@ class SpankyTTSService : TextToSpeechService() {
             Log.e(TAG, "BACKEND TTS ERROR: network I/O failure", e)
             callback.error(TextToSpeech.ERROR_NETWORK)
         } catch (e: Exception) {
+            if (isCancelled.get()) {
+                Log.i(TAG, "BACKEND TTS: cancelled")
+                return
+            }
             Log.e(TAG, "BACKEND TTS ERROR: synthesis failure", e)
             callback.error(TextToSpeech.ERROR_SYNTHESIS)
         } finally {
-            clearCurrentCall()
+            activeCall?.let { clearCurrentCallIf(it) }
         }
     }
 
@@ -278,12 +307,6 @@ class SpankyTTSService : TextToSpeechService() {
         synchronized(callLock) {
             currentTtsCall?.cancel()
             currentTtsCall = call
-        }
-    }
-
-    private fun clearCurrentCall() {
-        synchronized(callLock) {
-            currentTtsCall = null
         }
     }
 
@@ -309,6 +332,7 @@ class SpankyTTSService : TextToSpeechService() {
             synchronized(matcherLock) {
                 cachedIndexPath = null
                 anchorMatcher = null
+                contextExtractor = null
                 cachedAnchorResetVersion = resetVersion
             }
             return null
@@ -329,6 +353,7 @@ class SpankyTTSService : TextToSpeechService() {
             if (bookIndex == null) {
                 cachedIndexPath = configuredPath
                 anchorMatcher = null
+                contextExtractor = null
                 cachedAnchorResetVersion = resetVersion
                 Log.w(TAG, "ANCHOR: failed to load index at $configuredPath")
                 return null
@@ -337,6 +362,7 @@ class SpankyTTSService : TextToSpeechService() {
             val matcher = TextAnchorMatcher(bookIndex)
             cachedIndexPath = configuredPath
             anchorMatcher = matcher
+            contextExtractor = NarrationContextExtractor(bookIndex)
             cachedAnchorResetVersion = resetVersion
             Log.i(TAG, "ANCHOR: loaded index source=${bookIndex.sourceFilename} sections=${bookIndex.sections.size}")
             return matcher

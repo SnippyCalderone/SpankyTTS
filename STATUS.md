@@ -1,6 +1,6 @@
 # Spanky TTS — Development Status
 
-**Last updated:** 2026-09-25
+**Last updated:** 2026-10-14
 
 ## Current Phase
 
@@ -8,11 +8,11 @@
 
 The project has now proven the full end-to-end path from BOOX NeoReader to the local FastAPI backend, through OpenAI `gpt-4o-mini-tts`, and back to Android as raw PCM audio.
 
-The next active milestone is:
+**Phase 2B.2A COMPLETE — context-aware delivery is physically validated on the BOOX, with modest continuity gains and a known request-boundary limitation.**
 
-**Phase 2B.2A — Narration Continuity / Context-Aware Delivery**
+**Larger-generation-unit feasibility milestone VALIDATED / COMPLETE.** A separate chapter TTS experiment showed that longer coherent generation materially improves continuity and audiobook quality. It does not change NeoReader playback. The next milestone is source/audio alignment and cached slicing so each NeoReader request receives only its corresponding audio span.
 
-The immediate goal is to improve tone, cadence, and continuity across NeoReader's small synthesis chunks without changing the exact text NeoReader asks Spanky TTS to speak.
+The current live per-request TTS path remains the fallback and safety path. A generative TTS edge case remains: the model can omit text at the absolute end of a final block or chapter.
 
 ---
 
@@ -319,9 +319,36 @@ This behavior is expected from the current one-request/one-generation prototype.
 
 ---
 
-## Phase 2B.2A — NEXT
+## Phase 2B.2A — COMPLETE
 
 ### Narration Continuity / Context-Aware Delivery
+
+Implementation checkpoint: the matcher exposes a
+reliable current-fragment range, Android extracts up to 240 characters of
+original EPUB text on each side, and the backend places those optional context
+fields in delivery instructions while sending only the exact request as speech
+input. Missing or ambiguous matches retain context-free delivery. Android unit
+tests, backend mocked tests, and `assembleDebug` pass.
+
+Initial physical BOOX comparison (2026-09-25): baseline and context runs were
+logged and compared by listening. In the context run, 64 of 73 requests used EPUB context,
+72 delivered PCM successfully, and one stopped cleanly during an in-flight
+backend request; no backend errors appeared. The exact 15-character
+"And of course," request had context on both sides. The listener reported it
+was a little better, and "and they'd had plenty" was noticeably better, but
+tone, cadence, and pace still reset at some comma boundaries. "Mr." and "Poe"
+arrived in separate NeoReader requests and sounded especially discontinuous.
+This is an observed quality limit of independent per-fragment generation, not
+a transport failure. Cancellation during PCM delivery was checked twice with
+the updated build's 493-character controlled test. Both runs reached
+`callback.start()` and passed multiple PCM buffers before Stop.
+`audioAvailable()` returned `-1` immediately before `onStop()`; the service
+exited without `done()`. The existing log labels that callback return as an
+error, though the timing is consistent with the client stop. The listener
+confirmed that the context run spoke only words NeoReader requested; no
+surrounding EPUB words were heard. This completes the scoped context-delivery
+milestone. Separate generations still cause audible resets, especially when
+NeoReader splits "Mr." from "Poe".
 
 Goal:
 
@@ -341,14 +368,12 @@ OpenAI TTS
 Speak ONLY current NeoReader request
 ```
 
-Immediate design questions:
+Resolved design choices and observations:
 
-1. What amount of prior/following EPUB context should be supplied?
-2. Should Android send raw surrounding text to the backend, anchor metadata, or both?
-3. How should the backend clearly separate context from text-to-speak?
-4. How do we guarantee surrounding context is never spoken?
-5. How much does context improve cadence on short fragments?
-6. What latency/cost change does context introduce?
+1. Android supplies up to 240 characters of original EPUB text on either side when the current match is reliable.
+2. The backend receives separate `previous_context` and `following_context` fields; only the exact NeoReader request is OpenAI speech input.
+3. The physical comparison found some improvement and no spoken surrounding text, but independent calls still reset delivery.
+4. The context run repeated about 29,917 context characters across 73 requests, alongside 3,348 characters of speech input. These are character counts, not billed tokens.
 
 ### First validation target
 
@@ -363,36 +388,41 @@ and compare:
 - Phase 2B.1 isolated delivery
 - Phase 2B.2A context-aware delivery
 
-Success means the fragment sounds like part of the surrounding sentence rather than a standalone utterance.
+The listener found "And of course," a little better and another first-sentence
+fragment noticeably better. Full audiobook-like continuity remains a later
+architecture problem.
 
 ---
 
-## Phase 2B.2B — LATER
+## Larger-generation-unit feasibility — VALIDATED / COMPLETE
 
-### Latency / Prefetch / Cache / Alignment
+The standalone `experiments/chapter_tts/` utility extracts EPUB chapters and generates larger narration blocks without using Android or the production `/tts` endpoint. Chapter Five of *The Reptile Room* was generated as five blocks. Listening comparisons found materially better continuity, pacing, dialogue transitions, and overall audiobook quality than tiny independent NeoReader requests. Generation speed made future pre-generation and caching practical to investigate.
 
-After contextual delivery is proven, address generation gaps.
+The planner preserves paragraph boundaries where practical, moves a terminal paragraph of at most 120 characters from a non-final block to the next block when safe, and asserts that joining all blocks reproduces the extracted chapter exactly. The profile now includes text and ending fidelity instructions plus stronger scene and dialogue guidance. In the second full chapter run, the middle-of-chapter omissions were resolved, but the absolute final sentence was still absent from the audio. The sentence was present in the extracted and planned text. Isolated tests spoke it when real following EPUB text made it non-terminal and when explicit fidelity instructions were added to the short final paragraph; neither result solves terminal omission in a full final block.
 
-Likely topics:
+This milestone validates larger natural generation units, not text/audio alignment, cached playback, or chapter-boundary handling. NeoReader still uses the live per-request path and must receive audio only for the exact current synthesis request.
 
-- pre-generation
-- look-ahead/prefetch
-- local audio caching
-- deterministic cache keys
-- exact request-to-audio mapping
-- larger natural generation units
-- forced alignment or timestamp-based audio slicing if larger clips are generated
+---
+
+## Phase 2B.2B — NEXT MILESTONE
+
+### Source/audio alignment, cached slicing, and pre-generation
+
+The feasibility question for larger generation units has been answered positively. Design and implement a mapping from exact EPUB source spans to verified audio spans before serving any part of a longer clip to NeoReader.
+
+Required design work:
+
+- source/audio alignment with checks for omitted beginning and ending text
+- deterministic source-to-audio mapping and cache keys tied to text, model, voice, instructions, and relevant settings
+- cached audio slicing for the exact current NeoReader request
+- pre-generation and look-ahead strategy, including cache misses and fallback to live per-request TTS
+- eventual chapter-boundary handling, including the unresolved terminal-position omission
 
 Important constraint:
 
 A larger pre-generated paragraph cannot simply be returned for a smaller NeoReader request. Android/NeoReader still expects audio corresponding to the current synthesis request.
 
-Larger cached clips therefore require either:
-
-- generation at compatible request granularity, or
-- accurate text/audio alignment and slicing
-
-Do not hide this constraint with naive request aggregation.
+Larger cached clips require accurate text/audio alignment and slicing before playback integration. If a verified slice is unavailable, use the existing live per-request TTS path. Do not hide this constraint with naive request aggregation.
 
 ---
 
@@ -509,7 +539,7 @@ The fundamental end-to-end architecture is proven.
 
 ## Next Action
 
-Design and implement **Phase 2B.2A — context-aware narration continuity** without breaking:
+Design and implement source/audio alignment and cached slicing as the next separate milestone, then validate exact request-to-audio mapping before changing NeoReader playback. Preserve:
 
 - Phase 2A anchoring
 - exact current-request speech
@@ -517,3 +547,4 @@ Design and implement **Phase 2B.2A — context-aware narration continuity** with
 - cancellation
 - backend key isolation
 - current successful BOOX transport
+- live per-request TTS as fallback for cache misses or unverified audio

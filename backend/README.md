@@ -1,4 +1,4 @@
-# Spanky TTS Backend (Phase 2B.1)
+# Spanky TTS Backend
 
 Minimal FastAPI backend that provides:
 - `GET /health`
@@ -82,6 +82,14 @@ curl.exe -X POST "http://127.0.0.1:8000/tts" -H "Content-Type: application/json"
 ```
 
 The output file contains raw PCM (`s16le`, mono, 24000 Hz) with no WAV header.
+
+For Phase 2B.2A, `/tts` also accepts optional `previous_context` and
+`following_context` strings of at most 240 characters each. The backend uses
+them only in narration instructions. Only `text` is sent to OpenAI as speech
+input, including any leading or trailing whitespace. Requests without context
+retain the Phase 2B.1 behavior. Context-aware playback has been physically
+checked on the BOOX; it improves some fragments but still has audible resets
+between independently generated requests.
 
 Optional playback with ffplay (if installed):
 

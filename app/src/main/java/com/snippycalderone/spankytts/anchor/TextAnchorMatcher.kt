@@ -7,6 +7,7 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
     private var activeSectionIndex = -1
     private var lastMatchStart = -1
     private var lastMatchEnd = -1
+    private var reliableCurrentMatch: TextMatch? = null
 
     private val rollingHistory = ArrayDeque<String>()
     private val maxHistorySize = 4
@@ -34,23 +35,28 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
         activeSectionIndex = -1
         lastMatchStart = -1
         lastMatchEnd = -1
+        reliableCurrentMatch = null
         pendingReanchor = null
         rollingHistory.clear()
     }
 
-    fun processIncomingText(rawInput: String): List<String> {
+    fun processIncomingText(rawInput: String): AnchorProcessResult {
+        reliableCurrentMatch = null
         val normalizedInput = TextNormalizer.normalizeForMatch(rawInput)
         if (normalizedInput.isBlank()) {
-            return listOf(
-                "ANCHOR: ${if (anchored) "ANCHORED" else "UNANCHORED"}",
-                "ANCHOR INPUT: <empty after normalization>",
-                "ANCHOR STATUS: NOOP"
+            return AnchorProcessResult(
+                logs = listOf(
+                    "ANCHOR: ${if (anchored) "ANCHORED" else "UNANCHORED"}",
+                    "ANCHOR INPUT: <empty after normalization>",
+                    "ANCHOR STATUS: NOOP"
+                ),
+                reliableCurrentMatch = null
             )
         }
 
         addToHistory(normalizedInput)
 
-        return if (!anchored) {
+        val logs = if (!anchored) {
             handleUnanchored(normalizedInput)
         } else {
             val pendingOutcome = tryConfirmPendingReanchor(normalizedInput)
@@ -63,6 +69,7 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
                 logs
             }
         }
+        return AnchorProcessResult(logs, reliableCurrentMatch)
     }
 
     private fun handleUnanchored(normalizedInput: String): List<String> {
@@ -83,6 +90,11 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
                 activeSectionIndex = match.sectionIndex
                 lastMatchStart = match.start
                 lastMatchEnd = match.end
+                // A history candidate can include earlier requests. Only the suffix
+                // corresponding to this request is eligible for narration context.
+                if (candidate.endsWith(normalizedInput)) {
+                    markCurrentMatch(match.sectionIndex, match.end - normalizedInput.length, match.end)
+                }
                 logs.add("ANCHOR MATCH: section=${match.sectionName} start=${match.start} end=${match.end}")
                 logs.add("ANCHOR STATUS: ESTABLISHED")
                 return logs
@@ -124,6 +136,7 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
                         val delta = foundStart - localStart
                         lastMatchStart = foundStart
                         lastMatchEnd = foundEnd
+                        markCurrentMatch(activeSectionIndex, foundStart, foundEnd)
                         logs.add(
                             "ANCHOR TRACK: expectedAfter=$localStart foundStart=$foundStart foundEnd=$foundEnd delta=$delta"
                         )
@@ -155,6 +168,9 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
                 val delta = localMatch - localStart
                 lastMatchStart = localMatch
                 lastMatchEnd = foundEnd
+                if (findMatchesInRange(currentSection.normalizedText, normalizedInput, localStart, localLimit).size == 1) {
+                    markCurrentMatch(activeSectionIndex, localMatch, foundEnd)
+                }
                 logs.add(
                     "ANCHOR TRACK: expectedAfter=$localStart foundStart=$localMatch foundEnd=$foundEnd delta=$delta"
                 )
@@ -168,6 +184,9 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
                 val delta = remainderMatch - localStart
                 lastMatchStart = remainderMatch
                 lastMatchEnd = foundEnd
+                if (findMatchesInRange(currentSection.normalizedText, normalizedInput, localStart, currentSection.normalizedText.length).size == 1) {
+                    markCurrentMatch(activeSectionIndex, remainderMatch, foundEnd)
+                }
                 logs.add(
                     "ANCHOR TRACK: expectedAfter=$localStart foundStart=$remainderMatch foundEnd=$foundEnd delta=$delta"
                 )
@@ -191,6 +210,7 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
                     lastMatchEnd = match.end
                     anchored = true
                     pendingReanchor = null
+                    markCurrentMatch(match.sectionIndex, match.start, match.end)
                     logs.add("ANCHOR MATCH: section=${match.sectionName} start=${match.start} end=${match.end}")
                     logs.add("ANCHOR STATUS: RE-ANCHORED")
                 } else {
@@ -256,6 +276,7 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
                 lastMatchEnd = foundEnd
                 anchored = true
                 pendingReanchor = null
+                markCurrentMatch(pending.sectionIndex, foundStart, foundEnd)
                 PendingOutcome(
                     confirmed = true,
                     rejected = false,
@@ -293,6 +314,11 @@ class TextAnchorMatcher(private val bookIndex: BookIndex) {
 
     private fun activeSectionName(): String {
         return bookIndex.sections.getOrNull(activeSectionIndex)?.entryName ?: "<unknown>"
+    }
+
+    private fun markCurrentMatch(sectionIndex: Int, start: Int, end: Int) {
+        val section = bookIndex.sections.getOrNull(sectionIndex) ?: return
+        reliableCurrentMatch = TextMatch(sectionIndex, section.entryName, start, end)
     }
 
     private fun addToHistory(normalizedInput: String) {

@@ -17,3 +17,13 @@ data class TextMatch(
     val start: Int,
     val end: Int
 )
+
+data class AnchorProcessResult(
+    val logs: List<String>,
+    val reliableCurrentMatch: TextMatch?
+)
+
+data class NarrationContext(
+    val previous: String,
+    val following: String
+)

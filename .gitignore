@@ -42,3 +42,8 @@ backend/*.pcm
 backend/*.wav
 backend/**/__pycache__/
 backend/**/*.pyc
+
+# Local chapter narration experiment artifacts
+experiments/chapter_tts/output/
+experiments/chapter_tts/**/__pycache__/
+experiments/chapter_tts/**/*.pyc

@@ -16,7 +16,7 @@ The long-term goal is to make reading an EPUB in NeoReader feel closer to a prof
 
 # Current Development Phase
 
-## CURRENT PHASE: Phase 2B.2A — Narration Continuity / Context-Aware Delivery
+## CURRENT CHECKPOINT: Phase 2B.2A COMPLETE; larger-generation-unit feasibility VALIDATED
 
 The core transport architecture is already proven on the physical BOOX.
 
@@ -28,9 +28,11 @@ Completed:
 Phase 1    Android TTS / NeoReader integration       COMPLETE
 Phase 2A   Live EPUB text anchoring                  COMPLETE
 Phase 2B.1 FastAPI + OpenAI + real BOOX playback     COMPLETE
+Phase 2B.2A Context-aware narration delivery         COMPLETE
+Long-form chapter TTS feasibility experiment         VALIDATED / COMPLETE
 ```
 
-Current objective:
+Validated Phase 2B.2A behavior:
 
 ```text
 Use surrounding EPUB context
@@ -40,7 +42,16 @@ improve cadence / tone / continuity
 speak ONLY the exact current NeoReader request
 ```
 
-The next work should focus on narration quality without breaking the working transport, anchor matcher, callback lifecycle, or cancellation behavior.
+Physical testing found modest improvement in some short fragments and no
+surrounding EPUB words spoken. Separate generations still cause audible tone
+and cadence resets, especially when NeoReader divides "Mr." and "Poe" into
+different requests. A separate chapter experiment has now validated that larger
+generation units materially improve narration quality and can be generated fast
+enough to investigate pre-generation and caching. The experiment is not part of
+Android or production backend playback. Source/audio alignment, cached slicing,
+and handling of generative omissions remain to be designed and implemented.
+Exact per-request audio delivery, anchoring, callback lifecycle, and cancellation
+remain required.
 
 ---
 
@@ -693,7 +704,7 @@ The issue is whether independent chunks sound like one continuous audiobook perf
 
 ---
 
-# Phase 2B.2A — Current Objective
+# Phase 2B.2A — Completed Implementation and Observed Limit
 
 ## Goal
 
@@ -715,7 +726,7 @@ OpenAI TTS
 audio for CURRENT REQUEST ONLY
 ```
 
-## Design requirements
+## Original design requirements
 
 Before implementation, determine:
 
@@ -744,19 +755,37 @@ Do not attempt prefetch/cache/alignment in the same first change unless explicit
 
 ---
 
-# Phase 2B.2B — Future Latency Work
+# Larger-Generation-Unit Feasibility — Validated
 
-After context-aware narration is proven, address request-boundary delays.
+The standalone `experiments/chapter_tts/` utility extracts EPUB chapters and
+generates coherent blocks. Chapter Five of *The Reptile Room* was tested as five
+large blocks. Listening found better continuity, pacing, dialogue transitions,
+and overall audiobook quality than independent tiny requests. The planner's
+120-character non-final tail protection and exact-join assertion preserve the
+extracted source text. Text and ending fidelity instructions improved isolated
+final-paragraph delivery; a later full-chapter run still omitted the absolute
+final sentence. This is an unresolved generative audio fidelity issue, not an
+EPUB extraction or block-planning text loss.
 
-Potential techniques:
+The experiment does not provide aligned audio slices or change NeoReader
+playback. Only exact current-request audio may be returned to NeoReader.
 
-- prefetch
-- look-ahead generation
-- local audio cache
-- deterministic cache keys
-- larger natural synthesis units
-- word/timestamp alignment
-- slicing generated audio to the exact NeoReader request
+---
+
+# Phase 2B.2B — Next Milestone: Alignment and Cached Slicing
+
+The larger-generation-unit feasibility question has been answered positively.
+The next design and implementation work must map source spans to verified audio
+spans before longer clips can serve NeoReader's smaller requests.
+
+Required design topics:
+
+- audio/text alignment and beginning/end omission detection
+- deterministic source-to-audio mapping and cache keys
+- slicing cached audio to the exact current NeoReader request
+- pre-generation and look-ahead strategy
+- cache-miss fallback to the existing live per-request TTS path
+- eventual chapter-boundary and final-block handling
 
 Critical constraint:
 
@@ -764,10 +793,9 @@ Critical constraint:
 
 Doing so would cause duplication/highlighting/request-boundary problems when NeoReader sends the following requests.
 
-Larger pre-generated clips require either:
-
-- compatible chunk granularity, or
-- accurate audio/text alignment and slicing
+Larger pre-generated clips require accurate audio/text alignment and slicing
+before integration. Unverified or missing slices fall back to live per-request
+TTS.
 
 Do not implement naive request aggregation that violates the Android callback/request contract.
 

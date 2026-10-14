@@ -17,14 +17,19 @@ Completed milestones:
 - **Phase 1:** Android TTS engine / NeoReader integration
 - **Phase 2A:** Live EPUB text anchoring
 - **Phase 2B.1:** Local FastAPI backend + OpenAI TTS + real PCM playback in NeoReader
+- **Phase 2B.2A:** Context-aware narration for reliably anchored requests, physically checked on BOOX
+- **Larger-generation-unit feasibility:** Standalone chapter TTS experiment validated improved narration continuity and quality
 
-Current work:
+Next design work:
 
-- **Phase 2B.2A:** narration continuity using surrounding EPUB context
+- Source/audio alignment, deterministic request-to-audio mapping, and cached slicing of longer generated clips
+- Pre-generation/look-ahead strategy with live per-request TTS fallback for cache misses or unverified slices
 
 The current prototype can already read a real EPUB in NeoReader using OpenAI-generated speech.
 
 The remaining issues are primarily narration quality and latency across NeoReader's small request boundaries.
+
+The chapter experiment is separate from Android playback and the production backend. Its full-chapter audio can still omit the absolute final sentence even when the source text and block plan contain it. NeoReader continues to receive only audio for its exact current request through the proven live path.
 
 ---
 
@@ -169,7 +174,11 @@ This proves correctness, but it can create:
 - inconsistent short-fragment delivery
 - repeated generation latency
 
-The next phase will add surrounding EPUB context while still speaking only the exact current NeoReader request.
+Phase 2B.2A supplies surrounding EPUB context when the current request has a
+reliable anchor. BOOX testing found modest continuity improvement and no spoken
+surrounding text. Separate generations still cause audible resets at some
+request boundaries. The exact current NeoReader request remains the sole
+speech input.
 
 ---
 
@@ -393,6 +402,11 @@ Current Android request:
 }
 ```
 
+When the EPUB anchor is reliable, Android may also include optional
+`previous_context` and `following_context` fields (up to 240 characters each).
+The backend uses those fields only to guide delivery; it sends only `text` as
+the OpenAI speech input. Missing or ambiguous anchors keep the request above.
+
 Successful response:
 
 ```text
@@ -464,7 +478,7 @@ EPUB import, spine-aware indexing, normalized matching, live anchoring, and re-a
 
 FastAPI backend, OpenAI PCM generation, BOOX LAN transport, Android callback delivery, live NeoReader speech, and cancellation.
 
-### Phase 2B.2A — CURRENT
+### Phase 2B.2A — COMPLETE
 
 Context-aware narration continuity.
 
@@ -480,9 +494,13 @@ better narration guidance
 speak ONLY current chunk
 ```
 
-### Phase 2B.2B — PLANNED
+### Larger-generation-unit feasibility — VALIDATED / COMPLETE
 
-Latency reduction, prefetch, caching, and possibly audio/text alignment.
+The standalone [chapter TTS experiment](experiments/chapter_tts/README.md) generated Chapter Five as five coherent blocks. Listening found materially better audiobook continuity, pacing, and dialogue than tiny independent requests. The planner protects short non-final block tails and verifies an exact join back to the extracted chapter. Fidelity prompting improved isolated final-paragraph delivery, but a later full-chapter run still omitted the absolute final sentence. The experiment has no NeoReader playback integration.
+
+### Phase 2B.2B — NEXT MILESTONE
+
+Design and implement source/audio alignment, deterministic mapping, and cached audio slicing so each NeoReader request receives only its own verified audio span. Plan pre-generation and look-ahead, fallback to live per-request TTS on cache misses, and eventual chapter-boundary handling. Cached playback and alignment are not yet implemented.
 
 ### Later
 

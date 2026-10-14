@@ -1,0 +1,2 @@
+-r ../../backend/requirements.txt
+beautifulsoup4>=4.12,<5
