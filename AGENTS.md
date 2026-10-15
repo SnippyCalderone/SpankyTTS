@@ -7,6 +7,7 @@ This is an existing project. Do not treat it as a greenfield Android application
 Use the project documentation selectively:
 
 - Read `STATUS.md` to determine the current milestone, verified progress, and next action.
+- Read `ROADMAP.md` for the planned sequence and milestone dependencies before substantial work.
 - Read `PROJECT_CONTEXT.md` when a task affects architecture, Android TTS behavior, EPUB anchoring, backend/OpenAI integration, networking, audio handling, or phase boundaries.
 - Read `README.md` for repository structure, setup, build, backend, and usage information.
 
@@ -25,9 +26,12 @@ If documentation and code disagree, report the discrepancy rather than silently 
 - Phase 1 is complete.
 - Phase 2A is complete.
 - Phase 2B.1 is complete and physically validated on the BOOX Go Color II.
-- Current work begins with **Phase 2B.2A — Context-Aware Narration Continuity**.
+- Phase 2B.2A context-aware delivery is complete and physically checked on the BOOX.
+- Larger-generation-unit feasibility is validated in a standalone experiment.
+- **Phase 2B.2B — Alignment and Cached Playback** is the active engineering milestone. Its immediate task is a single-block source/audio alignment proof; alignment, cached slicing, and playback integration are not yet implemented.
+- Narrator Lab is a parallel experimental track. Character-voice integration depends on the later proven cached playback path.
 
-Do not implement later cache, prefetch, alignment, narration-director, or character-awareness work unless the requested task specifically calls for it.
+Keep implementation scoped to the requested milestone in `ROADMAP.md`. Do not pull later cache, pre-generation, narration-director, or character-voice integration into earlier alignment work.
 
 ## Important Constraints
 

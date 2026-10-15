@@ -20,10 +20,12 @@ Completed milestones:
 - **Phase 2B.2A:** Context-aware narration for reliably anchored requests, physically checked on BOOX
 - **Larger-generation-unit feasibility:** Standalone chapter TTS experiment validated improved narration continuity and quality
 
-Next design work:
+Current Phase 2B.2B engineering work:
 
-- Source/audio alignment, deterministic request-to-audio mapping, and cached slicing of longer generated clips
-- Pre-generation/look-ahead strategy with live per-request TTS fallback for cache misses or unverified slices
+- First prove source/audio alignment on one existing longer generated block.
+- Then verify cached slices and request simulation, integrate Android cached playback, and develop a small pre-generation queue.
+
+Narrator-quality experiments can run in parallel in a separate Narrator Lab. Character voices are a later production capability after aligned cached playback is proven. The [development roadmap](ROADMAP.md) shows the sequence and dependencies.
 
 The current prototype can already read a real EPUB in NeoReader using OpenAI-generated speech.
 
@@ -273,8 +275,10 @@ SpankyTTS/
 ├── gradle.properties
 ├── gradlew
 ├── gradlew.bat
+├── AGENTS.md
 ├── PROJECT_CONTEXT.md
 ├── STATUS.md
+├── ROADMAP.md
 ├── README.md
 └── .gitignore
 ```
@@ -453,7 +457,7 @@ backend/.env.example
 
 contains no secret.
 
-Current development HTTP access is limited to trusted LAN testing. The Android cleartext allowance and hardcoded local backend URL are temporary and should eventually be replaced by a safer configurable/HTTPS deployment.
+Current development HTTP access is limited to trusted LAN testing. The Android cleartext allowance and locally configured build-time backend URL are temporary and should eventually be replaced by a safer configurable/HTTPS deployment.
 
 ---
 
@@ -472,51 +476,19 @@ Stay active in background: Unlimited
 
 ## Roadmap
 
-### Phase 1 — COMPLETE
+Phase 1, Phase 2A, Phase 2B.1, and Phase 2B.2A are complete. The standalone
+[chapter TTS experiment](experiments/chapter_tts/README.md) proved that larger
+generation blocks improve narration quality; its audio is not yet aligned for
+NeoReader playback. A final-sentence omission remains an open fidelity issue.
 
-Android TTS integration and NeoReader compatibility.
+**Phase 2B.2B is active.** The next task is a single-block alignment proof,
+followed by verified slicing, NeoReader request simulation, Android cached
+playback with live fallback, and a small look-ahead queue. Narrator Lab explores
+delivery quality alongside that engineering work. Production character voices,
+scene audio, and release polish follow the aligned playback foundation.
 
-### Phase 2A — COMPLETE
-
-EPUB import, spine-aware indexing, normalized matching, live anchoring, and re-anchor recovery.
-
-### Phase 2B.1 — COMPLETE
-
-FastAPI backend, OpenAI PCM generation, BOOX LAN transport, Android callback delivery, live NeoReader speech, and cancellation.
-
-### Phase 2B.2A — COMPLETE
-
-Context-aware narration continuity.
-
-Goal:
-
-```text
-surrounding EPUB context
-        +
-exact current NeoReader chunk
-        ↓
-better narration guidance
-        ↓
-speak ONLY current chunk
-```
-
-### Larger-generation-unit feasibility — VALIDATED / COMPLETE
-
-The standalone [chapter TTS experiment](experiments/chapter_tts/README.md) generated Chapter Five as five coherent blocks. Listening found materially better audiobook continuity, pacing, and dialogue than tiny independent requests. The planner protects short non-final block tails and verifies an exact join back to the extracted chapter. Fidelity prompting improved isolated final-paragraph delivery, but a later full-chapter run still omitted the absolute final sentence. The experiment has no NeoReader playback integration.
-
-### Phase 2B.2B — NEXT MILESTONE
-
-Design and implement source/audio alignment, deterministic mapping, and cached audio slicing so each NeoReader request receives only its own verified audio span. Plan pre-generation and look-ahead, fallback to live per-request TTS on cache misses, and eventual chapter-boundary handling. Cached playback and alignment are not yet implemented.
-
-### Later
-
-- narration presets
-- settings UI
-- configurable backend
-- cache management
-- narration director
-- dialogue/character awareness
-- improved deployment/security
+See [ROADMAP.md](ROADMAP.md) for the detailed dependency-based plan and
+[STATUS.md](STATUS.md) for what has actually been verified.
 
 ---
 
@@ -547,6 +519,12 @@ Current implementation status and verified checkpoints:
 
 ```text
 STATUS.md
+```
+
+Detailed development sequence and dependencies:
+
+```text
+ROADMAP.md
 ```
 
 Backend-specific setup:

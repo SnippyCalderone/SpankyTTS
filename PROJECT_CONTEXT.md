@@ -16,7 +16,7 @@ The long-term goal is to make reading an EPUB in NeoReader feel closer to a prof
 
 # Current Development Phase
 
-## CURRENT CHECKPOINT: Phase 2B.2A COMPLETE; larger-generation-unit feasibility VALIDATED
+## CURRENT CHECKPOINT: Phase 2B.2B ACTIVE; Phase 2B.2A and larger-generation feasibility COMPLETE
 
 The core transport architecture is already proven on the physical BOOX.
 
@@ -52,6 +52,11 @@ Android or production backend playback. Source/audio alignment, cached slicing,
 and handling of generative omissions remain to be designed and implemented.
 Exact per-request audio delivery, anchoring, callback lifecycle, and cancellation
 remain required.
+
+The immediate engineering task is a single-block source/audio alignment proof.
+Narrator Lab runs in parallel as an isolated narration-quality experiment. See
+`ROADMAP.md` for sequence and dependencies. Neither aligned cached slicing nor
+Android cached playback has been implemented.
 
 ---
 
@@ -107,7 +112,7 @@ Spanky TTS should focus on:
 - speech generation
 - audio delivery
 - cancellation
-- cache/prefetch work later
+- planned aligned cache and look-ahead work
 
 ## Do not rewrite book text
 
@@ -196,6 +201,7 @@ SpankyTTS/
 │
 ├── PROJECT_CONTEXT.md
 ├── STATUS.md
+├── ROADMAP.md
 ├── README.md
 └── .gitignore
 ```
@@ -762,7 +768,8 @@ vs.
 context-aware generation
 ```
 
-Do not attempt prefetch/cache/alignment in the same first change unless explicitly requested.
+This scoped first change is complete. New alignment and cache work follows the
+separate Phase 2B.2B milestones in `ROADMAP.md`.
 
 ---
 
@@ -783,26 +790,93 @@ playback. Only exact current-request audio may be returned to NeoReader.
 
 ---
 
-# Phase 2B.2B — Next Milestone: Alignment and Cached Slicing
+# Phase 2B.2B — Active Engineering Milestone: Alignment and Cached Playback
 
 The larger-generation-unit feasibility question has been answered positively.
-The next design and implementation work must map source spans to verified audio
-spans before longer clips can serve NeoReader's smaller requests.
+The immediate experiment must map known EPUB source offsets to audio timestamps
+in one existing approximately 3,000-character generated block. Compare forced
+alignment, transcription with word timestamps, available model/provider timing
+metadata, and hybrid approaches before selecting an alignment method. Detect
+missing speech at the beginning and end; a text plan alone does not prove the
+model actually spoke every word.
+
+## Dual-track development strategy
+
+**Track A — core engineering** is the required path. Generate natural, larger
+narration blocks ahead of demand; align their audio to exact EPUB source spans;
+then serve verified slices for whatever small requests NeoReader actually makes.
+The project is not trying to predict NeoReader's request boundaries before
+generation. The Phase 2A matcher supplies the request's source position when it
+is reliable. A deterministic source-span to audio-span map supplies the slice.
+
+```text
+EPUB source → coherent generation → text/audio alignment → verified span map
+                                                       ↓
+NeoReader request → Phase 2A anchor → exact source span → cached PCM slice
+                                                       ↓
+                                           SynthesisCallback → NeoReader
+```
+
+**Track B — Narrator Lab** is an independent experimental path, recommended under
+`experiments/narrator_lab/`. It can compare voices, narration instructions,
+pacing, emotional range, scene dynamics, dialogue delivery, interruptions, and
+em-dash handling using A/B runs of the same short source excerpt. It must
+preserve exact book text and must not block or redefine Track A. Experimental
+results do not become Android playback behavior until the relevant architecture
+has been proven.
+
+Dialogue-direction principle: speech verbs, dialogue tags, adverbs, and nearby
+narration are performance cues for their associated quoted dialogue, even when
+the cue follows the quote. Examples include “said fiercely,” “hissed,”
+“impatiently,” “whispered,” and “excitedly.” The attribution itself should still
+be read naturally as narration.
+
+## Exact request delivery and fallback
+
+NeoReader expects the callback audio for the current synthesis request to match
+that request. Returning a whole paragraph or block for a smaller request would
+speak future book words early, then duplicate them when NeoReader requests those
+words, and desynchronize its request progression and highlighting. Surrounding
+EPUB text may inform generation, but it must not leak into the delivered slice.
+
+The planned `SpankyTTSService` decision path is:
+
+```text
+NeoReader request
+  → reliable Phase 2A source anchor?
+  → verified aligned cached slice for the exact request?
+      yes: deliver that PCM through the existing callback lifecycle
+      no:  use the existing live per-request OpenAI TTS path
+```
+
+An ambiguous anchor, incomplete alignment, missing cache entry, or unverified
+boundary cannot authorize cached audio. Keep the proven live path, callback
+size limits, cancellation, and backend-only API credentials. Alignment and
+slicing are not yet working; this is a proposed decision path.
+
+Generation strategy and delivery remain separate long term. Narrator and
+character voices or scene audio may eventually produce one coherent master
+generation, but the same source/audio alignment abstraction, cache, and exact
+NeoReader request slicing should deliver it. NeoReader need not know how the
+master audio was produced. Production character voices and scene effects depend
+on a proven cached aligned playback path; isolated quality experiments may run
+earlier.
 
 Required design topics:
 
-- audio/text alignment and beginning/end omission detection
-- deterministic source-to-audio mapping and cache keys
-- slicing cached audio to the exact current NeoReader request
-- pre-generation and look-ahead strategy
-- cache-miss fallback to the existing live per-request TTS path
-- eventual chapter-boundary and final-block handling
+- single-block alignment and beginning/end omission detection
+- deterministic source-to-audio mapping and cache keys tied to text, model,
+  voice, instructions, and relevant settings
+- verified slice boundaries without clipped or leaked meaningful words
+- replay of observed NeoReader request patterns before Android integration
+- pre-generation of several natural blocks into a small look-ahead queue
+- cache-miss fallback and eventual chapter-boundary/final-block handling
 
 Critical constraint:
 
 > A paragraph-sized audio clip cannot simply be returned for the first tiny NeoReader request.
 
-Doing so would cause duplication/highlighting/request-boundary problems when NeoReader sends the following requests.
+Doing so would cause duplication, highlighting, and request-boundary problems when NeoReader sends the following requests.
 
 Larger pre-generated clips require accurate audio/text alignment and slicing
 before integration. Unverified or missing slices fall back to live per-request
@@ -812,9 +886,10 @@ Do not implement naive request aggregation that violates the Android callback/re
 
 ---
 
-# Longer-Term Roadmap
+# Longer-Term Capabilities
 
-After 2B.2:
+`ROADMAP.md` is the source for sequence and dependencies. The following are
+later capabilities, after the aligned cached path is proven:
 
 ## Usability
 
@@ -825,7 +900,7 @@ After 2B.2:
 - voice preview
 - persistent settings
 
-## Cache
+## Cache management
 
 - avoid repeated API charges
 - improve replay/startup speed
@@ -848,14 +923,16 @@ The director should affect delivery, not rewrite the book.
 
 ## Character Awareness
 
-Experimental future goal:
+Later production goal, with isolated experiments allowed earlier:
 
 - distinguish narration from dialogue
 - detect recurring speakers
 - preserve consistent character delivery
 - avoid random voice switching
 
-Do not implement this until base continuity/latency behavior is reliable.
+Do not integrate this into production playback until aligned cached delivery is
+proven. Character voices and scene effects share its source/audio mapping and
+exact-request delivery contract.
 
 ---
 
@@ -915,7 +992,7 @@ When working on this repository:
 11. Never let context text accidentally become spoken text.
 12. Do not claim success until physical BOOX behavior is verified when the task depends on NeoReader.
 13. Prefer ADB/logcat evidence over assumptions.
-14. Do not implement future cache/alignment/director features unless requested.
+14. Scope new work to the requested `ROADMAP.md` milestone; do not pull later features into an earlier proof.
 15. Keep code understandable for a developer who is actively learning the project.
 
 ---
@@ -993,7 +1070,10 @@ Do not bury the next action.
 
 # Current Checkpoint
 
-Phase 2B.1 has been committed and pushed.
+Completed repository work includes Phase 2B.2A context-aware delivery and the
+validated standalone larger-generation-unit experiment, alongside the earlier
+Phase 1, Phase 2A, and Phase 2B.1 milestones. Phase 2B.2B is active. Source/audio
+alignment, cached slicing, and cached NeoReader playback are not yet implemented.
 
 The current known-good system can:
 
@@ -1019,7 +1099,9 @@ Stop cancels active work
 
 The product concept is proven.
 
-The next job is to make independent NeoReader chunks sound like one continuous narration performance.
+The next job is to prove source/audio alignment on one existing generated block.
+Verified slicing, request simulation, and cached Android delivery follow that
+proof. Narrator Lab can improve the master performance in parallel.
 
 ---
 

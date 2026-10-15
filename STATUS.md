@@ -1,8 +1,10 @@
 # Spanky TTS — Development Status
 
-**Last updated:** 2026-10-14
+**Last updated:** 2026-10-15
 
 ## Current Phase
+
+**Phase 2B.2B — Alignment and Cached Playback is the active engineering milestone.** The immediate task is to evaluate alignment approaches on one existing approximately 3,000-character generated block and prove deterministic EPUB source-offset to audio-time lookup, including beginning/end completeness checks. No source/audio alignment, cached slicing, or cached NeoReader playback is implemented yet.
 
 **Phase 2B.1 COMPLETE — Live OpenAI TTS transport on the physical BOOX**
 
@@ -10,9 +12,11 @@ The project has now proven the full end-to-end path from BOOX NeoReader to the l
 
 **Phase 2B.2A COMPLETE — context-aware delivery is physically validated on the BOOX, with modest continuity gains and a known request-boundary limitation.**
 
-**Larger-generation-unit feasibility milestone VALIDATED / COMPLETE.** A separate chapter TTS experiment showed that longer coherent generation materially improves continuity and audiobook quality. It does not change NeoReader playback. The next milestone is source/audio alignment and cached slicing so each NeoReader request receives only its corresponding audio span.
+**Larger-generation-unit feasibility milestone VALIDATED / COMPLETE.** A separate chapter TTS experiment showed that longer coherent generation materially improves continuity and audiobook quality. It does not change NeoReader playback. The current engineering work is source/audio alignment and, later, cached slicing so each NeoReader request receives only its corresponding audio span.
 
 The current live per-request TTS path remains the fallback and safety path. A generative TTS edge case remains: the model can omit text at the absolute end of a final block or chapter.
+
+**Narrator Lab is the parallel experimental track.** It can explore delivery quality independently of Android playback. Production character voices are a later capability that depends on the aligned cached playback path. See `ROADMAP.md` for sequencing and dependencies.
 
 ---
 
@@ -406,11 +410,11 @@ This milestone validates larger natural generation units, not text/audio alignme
 
 ---
 
-## Phase 2B.2B — NEXT MILESTONE
+## Phase 2B.2B — ACTIVE ENGINEERING MILESTONE
 
 ### Source/audio alignment, cached slicing, and pre-generation
 
-The feasibility question for larger generation units has been answered positively. Design and implement a mapping from exact EPUB source spans to verified audio spans before serving any part of a longer clip to NeoReader.
+The feasibility question for larger generation units has been answered positively. First prove a mapping from exact EPUB source spans to verified audio spans on one existing generated block before serving any part of a longer clip to NeoReader. Natural generation blocks are independent of NeoReader's arbitrary request boundaries; the request is mapped onto the source/audio span after generation.
 
 Required design work:
 
@@ -478,7 +482,8 @@ adb logcat SpankyTTS:I AndroidRuntime:E *:S
 Saved diagnostic log:
 
 ```powershell
-adb logcat SpankyTTS:I AndroidRuntime:E *:S | Tee-Object -FilePath phase2_tts_live.txt
+New-Item -ItemType Directory -Force -Path build/logs | Out-Null
+adb logcat SpankyTTS:I AndroidRuntime:E *:S | Tee-Object -FilePath build/logs/phase2_tts_live.txt
 ```
 
 ### Backend setup
@@ -514,9 +519,12 @@ Android HTTP client: OkHttp 4.11.0
 
 ## Repository Checkpoint
 
-The Phase 2B.1 implementation has been committed and pushed.
+Completed repository work includes Phase 2B.2A context-aware delivery and the
+validated standalone larger-generation-unit experiment, in addition to the
+earlier milestones. Phase 2B.2B is the active engineering milestone; source/audio
+alignment, cached slicing, and cached NeoReader playback are not yet implemented.
 
-Current checkpoint includes:
+The proven foundation includes:
 
 - Phase 2A EPUB anchoring
 - spine-aware EPUB indexing
@@ -528,6 +536,8 @@ Current checkpoint includes:
 - Android backend integration
 - real NeoReader OpenAI narration
 - cancellation support
+- Phase 2B.2A context-aware delivery, physically checked on the BOOX
+- standalone larger-generation-unit feasibility, validated by listening
 
 ---
 
@@ -541,7 +551,7 @@ The fundamental end-to-end architecture is proven.
 
 ## Next Action
 
-Design and implement source/audio alignment and cached slicing as the next separate milestone, then validate exact request-to-audio mapping before changing NeoReader playback. Preserve:
+Evaluate forced alignment, transcription with word timestamps, available model/provider timing metadata, and hybrid approaches on one existing approximately 3,000-character generated block. Prove deterministic lookup from known EPUB source offsets to audio timestamps and check for omitted beginning or ending text. Then proceed through verified slicing and request simulation before Android cached playback integration. Preserve:
 
 - Phase 2A anchoring
 - exact current-request speech
