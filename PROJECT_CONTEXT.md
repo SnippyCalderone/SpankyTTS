@@ -512,13 +512,17 @@ backend/**/*.pyc
 
 # Development Networking
 
-Current development backend address used by Android:
+The Android backend URL is read at build time from the ignored root
+`local.properties` file:
 
-```text
-http://<development-pc-ip>:8000
+```properties
+SPANKY_TTS_BACKEND_URL=http://<development-pc-ip>:8000/tts
 ```
 
-This is temporary LAN configuration.
+Replace the placeholder with the development PC's LAN address for BOOX builds.
+If unset, the safe build default is `http://127.0.0.1:8000/tts`. The service
+reads `BuildConfig.BACKEND_TTS_URL`; changing the local property requires a
+rebuild. This is temporary LAN configuration.
 
 Uvicorn LAN command:
 
@@ -526,13 +530,14 @@ Uvicorn LAN command:
 uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
 ```
 
-BOOX browser access to:
+During prior physical testing, the BOOX browser accessed the configured LAN
+health endpoint:
 
 ```text
 http://<development-pc-ip>:8000/health
 ```
 
-has been physically verified.
+and received HTTP 200.
 
 Windows configuration used during testing:
 
@@ -541,7 +546,7 @@ Windows configuration used during testing:
 
 Android currently allows cleartext HTTP for this LAN development path.
 
-Treat both the hardcoded LAN URL and broad cleartext allowance as temporary development configuration.
+Treat the locally configured LAN URL and broad cleartext allowance as temporary development configuration.
 
 Do not expose the backend on untrusted/public networks.
 
@@ -807,7 +812,7 @@ After 2B.2:
 
 ## Usability
 
-- configurable backend URL
+- in-app backend URL setting (the current URL is configured locally at build time)
 - voice selection
 - narration presets
 - better network/error UI
@@ -939,7 +944,7 @@ uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
 Health:
 
 ```powershell
-Invoke-RestMethod http://<development-pc-ip>:8000/health
+Invoke-RestMethod 'http://<development-pc-ip>:8000/health'
 ```
 
 ---

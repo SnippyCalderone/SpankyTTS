@@ -368,18 +368,24 @@ For BOOX LAN testing:
 uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
 ```
 
-Current development Android configuration points to:
+Set the Android backend URL in the repository root's ignored `local.properties`:
 
-```text
-http://<development-pc-ip>:8000
+```properties
+SPANKY_TTS_BACKEND_URL=http://<development-pc-ip>:8000/tts
 ```
 
-That address is a temporary LAN development constant and may need to be changed if the PC's local IP changes.
+Replace `<development-pc-ip>` with the development PC's LAN address before building
+for the BOOX. Gradle reads this property at build time and puts it in
+`BuildConfig.BACKEND_TTS_URL`; the TTS service uses that URL for each request.
+Without the property, builds default to `http://127.0.0.1:8000/tts`, which is
+useful for local development but does not reach the PC from the BOOX. Rebuild
+the APK after changing the property. `local.properties` is ignored by Git; keep
+your actual LAN address there, not in tracked source or documentation.
 
 ### 5. Health check
 
 ```powershell
-Invoke-RestMethod http://<development-pc-ip>:8000/health
+Invoke-RestMethod 'http://<development-pc-ip>:8000/health'
 ```
 
 Expected body:

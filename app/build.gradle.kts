@@ -1,11 +1,27 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
 
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.isFile) file.inputStream().use { load(it) }
+}
+val backendTtsUrl = localProperties.getProperty("SPANKY_TTS_BACKEND_URL")
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() }
+    ?: "http://127.0.0.1:8000/tts"
+val escapedBackendTtsUrl = backendTtsUrl.replace("\\", "\\\\").replace("\"", "\\\"")
+
 android {
     namespace = "com.snippycalderone.spankytts"
     compileSdk = 33
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.snippycalderone.spankytts"
@@ -13,6 +29,7 @@ android {
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "BACKEND_TTS_URL", "\"$escapedBackendTtsUrl\"")
     }
 
     buildTypes {

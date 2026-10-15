@@ -28,8 +28,6 @@ class SpankyTTSService : TextToSpeechService() {
     // Log tag
     companion object {
         private const val TAG = "SpankyTTS"
-        // TODO(Phase2B): temporary LAN development backend; replace with configurable HTTPS endpoint.
-        private const val DEV_BACKEND_TTS_URL = "http://127.0.0.1:8000/tts"
         private const val REQUEST_VOICE = "cedar"
         private const val REQUEST_INSTRUCTIONS = "Read naturally as a professional audiobook narrator. Use natural pacing and expressive but restrained delivery."
         private const val EXPECTED_SAMPLE_RATE = 24000
@@ -134,7 +132,7 @@ class SpankyTTSService : TextToSpeechService() {
         try {
             val startMs = System.currentTimeMillis()
             Log.i(TAG, "BACKEND TTS: request chars=$charCount")
-            Log.i(TAG, "BACKEND TTS: POST $DEV_BACKEND_TTS_URL")
+            Log.i(TAG, "BACKEND TTS: POST ${BuildConfig.BACKEND_TTS_URL}")
             val requestJson = JSONObject()
                 .put("text", text)
                 .put("voice", REQUEST_VOICE)
@@ -145,7 +143,7 @@ class SpankyTTSService : TextToSpeechService() {
             }
 
             val httpRequest = Request.Builder()
-                .url(DEV_BACKEND_TTS_URL)
+                .url(BuildConfig.BACKEND_TTS_URL)
                 .post(requestJson.toString().toRequestBody(JSON_MEDIA_TYPE))
                 .build()
 

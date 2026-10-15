@@ -40,7 +40,8 @@ Android SynthesisCallback
 NeoReader playback on BOOX
 ```
 
-Current development backend:
+Development backend (set the PC address in the ignored root `local.properties`
+as `SPANKY_TTS_BACKEND_URL=http://<development-pc-ip>:8000/tts` before building):
 
 ```text
 http://<development-pc-ip>:8000
@@ -203,7 +204,8 @@ backend/**/*.pyc
 
 ### BOOX → backend LAN connectivity
 
-Physically verified from the BOOX browser:
+During prior physical testing, the BOOX browser accessed the configured LAN
+health endpoint:
 
 ```text
 http://<development-pc-ip>:8000/health
@@ -489,7 +491,7 @@ uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000
 ### Health check
 
 ```powershell
-Invoke-RestMethod http://<development-pc-ip>:8000/health
+Invoke-RestMethod 'http://<development-pc-ip>:8000/health'
 ```
 
 ---
