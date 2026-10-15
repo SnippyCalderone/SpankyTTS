@@ -372,6 +372,12 @@ The following request must uniquely continue near that candidate before the acti
 
 This avoids false cross-section jumps.
 
+The Phase 2A BOOX logs showed why this confirmation matters: a passage repeated
+in the EPUB contents section briefly drew an earlier matcher into that section.
+A later Chapter 2 jump was then logged as pending and was committed only after
+the next request continued there. The raw validation captures were local test
+artifacts; this is the finding to retain for future matcher work.
+
 ### Known matcher limitation
 
 Some tiny/common fragments can remain ambiguous.

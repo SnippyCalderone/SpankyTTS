@@ -37,13 +37,16 @@ google-services.json
 
 # Backend local files
 backend/.env
-backend/.venv/
 backend/*.pcm
 backend/*.wav
-backend/**/__pycache__/
-backend/**/*.pyc
+
+# Python environments, bytecode, and test caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # Local chapter narration experiment artifacts
 experiments/chapter_tts/output/
-experiments/chapter_tts/**/__pycache__/
-experiments/chapter_tts/**/*.pyc
