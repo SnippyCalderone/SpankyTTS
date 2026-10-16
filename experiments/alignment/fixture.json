@@ -1,0 +1,21 @@
+{
+  "id": "reptile_room_chapter_five_20261014_060811_part_002",
+  "run_id": "20261014_060811_408632",
+  "part": 2,
+  "source_file": "experiments/chapter_tts/output/The Reptile Room/CHAPTER Five/20261014_060811_408632/part_002.txt",
+  "source_sha256": "4279b2625585d475066aede8d09a493c9d2f7b81036b6553e263d3669041b28f",
+  "audio_file": "experiments/chapter_tts/output/The Reptile Room/CHAPTER Five/20261014_060811_408632/part_002.mp3",
+  "audio_sha256": "e14afe822a5d782f8d66e2ed42b778c9ceaacc8421a0547730ecdc53ca0707b7",
+  "chapter_source_file": "experiments/chapter_tts/output/The Reptile Room/CHAPTER Five/20261014_060811_408632/chapter_source.txt",
+  "chapter_source_sha256": "1db792fea62aab7f550f4ee1911d87173069229195c1ee9130c15adeb76d0289",
+  "run_summary_file": "experiments/chapter_tts/output/The Reptile Room/CHAPTER Five/20261014_060811_408632/run_summary.json",
+  "run_summary_sha256": "0ad9d5496cb59203b572c5b809b8dcb492b9d10f647656735ca2a21c7e21099c",
+  "chapter_source_start": 3177,
+  "chapter_source_end": 6385,
+  "source_character_count": 3208,
+  "source_whitespace_word_count": 583,
+  "audio_duration_seconds": 179.016,
+  "generation_model": "gpt-4o-mini-tts",
+  "generation_voice": "cedar",
+  "generation_speed": 1.0
+}
