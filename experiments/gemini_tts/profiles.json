@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "profiles": {
+    "neutral": {
+      "version": "1",
+      "style": "Natural, neutral audiobook narration. Maintain one consistent narrator identity, clear diction, moderate pace, and natural phrasing. Read dialogue and attribution fluidly. Speak every word of the transcript exactly once, including the ending."
+    },
+    "character_aware": {
+      "version": "1",
+      "style": "Restrained audiobook narration with one consistent narrator identity. Let dialogue subtly reflect the emotion, urgency, and attitude indicated by nearby prose and dialogue tags through pacing, energy, and inflection. Return naturally to narration for attributions. Avoid exaggerated impressions or changing the underlying voice. Speak every word of the transcript exactly once, including the ending."
+    }
+  }
+}

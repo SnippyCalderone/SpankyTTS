@@ -55,3 +55,8 @@ experiments/chapter_tts/output/
 experiments/alignment/.models/
 experiments/alignment/.cache/
 experiments/alignment/output/
+
+# Gemini TTS generated artifacts
+experiments/gemini_tts/output/
+experiments/gemini_tts/.env
+experiments/gemini_tts/*.local.json
