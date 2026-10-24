@@ -1,0 +1,2 @@
+# Only direct dependency. Offline catalog commands and tests use the standard library.
+google-genai==2.31.0

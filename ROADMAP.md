@@ -2,11 +2,13 @@
 
 This is the planned sequence. `STATUS.md` records verified progress; `PROJECT_CONTEXT.md` records architectural constraints. A planned milestone below is not an implementation claim.
 
-## Current position — 2026-10-15
+## Current position — 2026-10-23
 
-**Track A: Phase 2B.2B-1, single-block source/audio alignment proof, is next.** Use one existing approximately 3,000-character generated narration block. Find reliable audio timestamps for known EPUB source offsets and check whether the beginning and end were actually spoken. No aligned cache, audio slicing, or cached NeoReader playback works yet.
+**Track A: Phase 2B.2B-1, single-block source/audio alignment proof, is in progress.** A standalone Whisper ASR/source-token experiment has produced a candidate map and listening-review clips for an existing block. Its saved status is `ALIGNED_BUT_UNCERTAIN`; the full listen, discrepancy resolution, beginning/end checks, and verified lookup remain. No aligned cache, audio slicing, or cached NeoReader playback works yet.
 
 **Track B: Narrator Lab may run in parallel.** It is an isolated quality experiment and does not block Track A.
+
+**Track C: Master Voice Library M0A–M0C is complete as a local catalog.** Sixteen Gemini voices are synchronized and Gabriel de León has a preferred slot 1 assignment. Voice refinement and additional assignments can continue locally; using these voices for narration or NeoReader playback remains future work.
 
 ## Proven foundation
 
@@ -17,6 +19,10 @@ This is the planned sequence. `STATUS.md` records verified progress; `PROJECT_CO
 | Phase 2B.1 — live OpenAI PCM path | Complete | Physical BOOX NeoReader playback, backend transport, callbacks, and cancellation. |
 | Phase 2B.2A — context-aware per-request delivery | Complete | Physical comparison found modest gains and no spoken surrounding EPUB text; request-boundary resets remain. |
 | Larger-generation-unit feasibility | Validated | Standalone chapter experiment produced more coherent audio. It did not implement alignment or NeoReader playback; absolute final-sentence omission remains unresolved. |
+| Master Voice Library M0A–M0B | Complete | Versioned SQLite catalog, stable project-scoped voice IDs, read-only Google sync; 16 voices imported in one complete page with zero duplicates. |
+| Master Voice Library M0C | Complete | Schema v2, scoped characters, local annotations/tags, assignments, preference/history, warnings; backed-up migration preserved all 16 voice rows. |
+| First character-to-voice assignment | Complete locally | Empire of the Vampire / Gabriel de León → Gemini “Gabriel de León 2”, slot 1, preferred; no narration or Android integration. |
+| 2B.2B-1 automated alignment candidate | In progress | One-block source/ASR map and review clips exist; saved result `ALIGNED_BUT_UNCERTAIN`, not cache eligible. |
 
 ## Dependency path
 
@@ -43,15 +49,17 @@ master-generation quality without changing its delivery contract.
 
 The design generates natural larger narration units ahead of NeoReader requests. It does **not** predict NeoReader's request boundaries. Once a request arrives, the Phase 2A matcher identifies its exact EPUB source span; a verified alignment map finds the corresponding audio span. Only that span is eligible for callback delivery. If the anchor or slice is unverified, use the existing live per-request OpenAI TTS path.
 
-### 2B.2B-1 — Single-block alignment proof — immediate task
+### 2B.2B-1 — Single-block alignment proof — human verification next
 
 - Take one already generated approximately 3,000-character narration block and its exact EPUB source text/offsets.
-- Evaluate forced alignment, transcription with word timestamps, model/provider timing metadata if available, and a hybrid approach before choosing one.
+- Review the existing Whisper ASR/source-token candidate map against the audio; investigate other alignment methods if discrepancies cannot be resolved reliably.
 - Map known EPUB character/source offsets to audio timestamps and show deterministic source-text to audio-time lookup.
-- Detect omitted or altered speech, especially at the beginning and absolute end; text present in the block plan alone is insufficient.
+- Resolve every uncertain/missing/extra word and check the beginning and absolute end by listening; text present in the block plan alone is insufficient.
 - Record confidence/verification rules that can reject uncertain spans. Keep this experiment separate from Android playback.
 
 **Exit evidence:** repeatable lookup results for the selected block and an explicit account of spoken completeness and uncertain boundaries.
+
+The saved automated result is `ALIGNED_BUT_UNCERTAIN`, so this exit evidence is not yet met. See [the alignment experiment](experiments/alignment/README.md).
 
 ### 2B.2B-2 — Verified audio slicing
 
@@ -89,7 +97,7 @@ The design generates natural larger narration units ahead of NeoReader requests.
 
 ## Track B — Narrator Lab, parallel and experimental
 
-Recommended location: `experiments/narrator_lab/`. Keep artifacts and comparisons separate from production Android playback. Use the same short source excerpt for A/B comparisons and preserve strict text fidelity.
+The current isolated [Gemini Narrator Lab](experiments/gemini_tts/README.md) lives in `experiments/gemini_tts/`. Keep artifacts and comparisons separate from production Android playback. Use the same short source excerpt for A/B comparisons and preserve strict text fidelity.
 
 1. Establish repeatable voice and narration-instruction comparisons.
 2. Refine pacing, emotional range, scene dynamics, and dialogue delivery.
@@ -98,9 +106,17 @@ Recommended location: `experiments/narrator_lab/`. Keep artifacts and comparison
 
 Track B may proceed between Track A milestones. Its experiments do not block, redefine, or replace alignment and cached playback.
 
+## Track C — Master Voice Library, local catalog
+
+**Completed:** M0A SQLite foundation and stable provider-qualified voice identities; M0B registered Gemini project and successful read-only sync of 16 voices; M0C schema v2, scoped characters, local metadata, tags, up to three active assignments, preference/history, and availability/expiration diagnostics. The backed-up migration preserved all 16 voices. The Empire of the Vampire series scope and Gabriel de León are registered, and Gemini “Gabriel de León 2” is Gabriel's preferred slot 1 voice.
+
+**Pending local voice work:** refine Ashdrinker and select a preferred voice; register further characters and select their voices; optionally add a local preview/comparison interface. Preview or refinement work that generates audio requires its own approved provider use.
+
+**Pending integration:** connect the library to narration generation with explicit voice identity and text fidelity, then to SpankyTTS only after the source-aligned cache and exact-request playback path have been proven. A local assignment does not change today's Android/NeoReader speech.
+
 ## Later work that depends on aligned cached playback
 
-- **Character voices:** experiment early if useful, but wait for proven cached aligned delivery before production integration.
+- **Character voices:** refine and catalog locally now; wait for proven cached aligned delivery before production NeoReader integration.
 - **Scene-aware generation and sound effects:** keep generated master audio mapped to EPUB source spans and delivered as exact NeoReader request slices.
 - **Product polish and release:** voice presets and preview, settings and cache management, network/error UI, configurable and safer backend deployment, performance and reliability work, and physical-device regression checks.
 

@@ -1,0 +1,18 @@
+{
+  "pages": [
+    {
+      "voices": [
+        {
+          "id": "voice_fixture_narrator_001",
+          "type": "prompted",
+          "display_name": "Fixture Narrator",
+          "model": "gemini-3.8-flash-tts",
+          "prompted": {"input": "A warm, steady fictional narrator."},
+          "language_code": "en-US",
+          "expire_time": "2027-10-23T00:00:00Z"
+        }
+      ],
+      "next_page_token": null
+    }
+  ]
+}

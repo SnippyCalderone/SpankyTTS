@@ -36,10 +36,14 @@ attribution without switching voice. Such cues cannot guarantee distinct,
 persistent character identities or perfect spoken-word fidelity; review the
 saved audio against the source before using it for any later alignment work.
 
-For a later character registry, use an ignored `voices.local.json` with entries
-such as `{"characters":{"character_name":{"provider":"google_gemini", "voice_id":"..."}}}`.
-Keep provider and ID together so a voice from another service is never passed
-to Gemini by accident. This first lab does not load or switch character voices.
+The separate [Master Voice Library](../../master_voice_library/README.md) now
+holds persistent, project-scoped custom voice identities and local character
+assignments. Its first sync cataloged 16 Gemini voices; Gabriel de León has a
+preferred local assignment to “Gabriel de León 2”. This narrator experiment
+still uses its configured narrator voice and does **not** read the library or
+switch character voices. Future integration must resolve a library assignment
+to its provider-qualified ID and preserve the exact source text. Local catalog
+UUIDs must not be passed to Gemini as provider voice IDs.
 
 ## Dry runs and tests (no credits)
 

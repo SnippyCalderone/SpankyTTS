@@ -16,7 +16,7 @@ The long-term goal is to make reading an EPUB in NeoReader feel closer to a prof
 
 # Current Development Phase
 
-## CURRENT CHECKPOINT: Phase 2B.2B ACTIVE; Phase 2B.2A and larger-generation feasibility COMPLETE
+## CURRENT CHECKPOINT: Phase 2B.2B ACTIVE; Master Voice Library M0A–M0C COMPLETE LOCALLY
 
 The core transport architecture is already proven on the physical BOOX.
 
@@ -30,6 +30,7 @@ Phase 2A   Live EPUB text anchoring                  COMPLETE
 Phase 2B.1 FastAPI + OpenAI + real BOOX playback     COMPLETE
 Phase 2B.2A Context-aware narration delivery         COMPLETE
 Long-form chapter TTS feasibility experiment         VALIDATED / COMPLETE
+Master Voice Library M0A–M0C                         COMPLETE LOCAL CATALOG
 ```
 
 Validated Phase 2B.2A behavior:
@@ -48,15 +49,20 @@ and cadence resets, especially when NeoReader divides "Mr." and "Poe" into
 different requests. A separate chapter experiment has now validated that larger
 generation units materially improve narration quality and can be generated fast
 enough to investigate pre-generation and caching. The experiment is not part of
-Android or production backend playback. Source/audio alignment, cached slicing,
-and handling of generative omissions remain to be designed and implemented.
+Android or production backend playback. The standalone alignment candidate
+requires human verification; cached slicing and handling of generative
+omissions remain open work.
 Exact per-request audio delivery, anchoring, callback lifecycle, and cancellation
 remain required.
 
-The immediate engineering task is a single-block source/audio alignment proof.
-Narrator Lab runs in parallel as an isolated narration-quality experiment. See
-`ROADMAP.md` for sequence and dependencies. Neither aligned cached slicing nor
-Android cached playback has been implemented.
+The standalone one-block alignment experiment has produced a Whisper ASR/source
+candidate map and review clips, but its saved result is `ALIGNED_BUT_UNCERTAIN`.
+Human listening and discrepancy resolution are the next engineering task.
+Narrator Lab and the Master Voice Library run in parallel as isolated local
+tracks. The library contains 16 synchronized Gemini voices and one preferred
+Gabriel de León assignment, but it is not used by narration generation or
+Android. See `ROADMAP.md` for sequence and dependencies. Neither verified
+cached slicing nor Android cached playback has been implemented.
 
 ---
 
@@ -198,6 +204,15 @@ SpankyTTS/
 │   ├── .env.example
 │   ├── README.md
 │   └── requirements.txt
+│
+├── experiments/
+│   ├── alignment/
+│   ├── chapter_tts/
+│   └── gemini_tts/
+├── master_voice_library/
+│   ├── migrations/
+│   ├── tests/
+│   └── README.md
 │
 ├── PROJECT_CONTEXT.md
 ├── STATUS.md
@@ -817,8 +832,9 @@ NeoReader request → Phase 2A anchor → exact source span → cached PCM slice
                                            SynthesisCallback → NeoReader
 ```
 
-**Track B — Narrator Lab** is an independent experimental path, recommended under
-`experiments/narrator_lab/`. It can compare voices, narration instructions,
+**Track B — Narrator Lab** is an independent experimental path; the current
+Gemini lab lives under `experiments/gemini_tts/`. It can compare voices,
+narration instructions,
 pacing, emotional range, scene dynamics, dialogue delivery, interruptions, and
 em-dash handling using A/B runs of the same short source excerpt. It must
 preserve exact book text and must not block or redefine Track A. Experimental
@@ -923,7 +939,8 @@ The director should affect delivery, not rewrite the book.
 
 ## Character Awareness
 
-Later production goal, with isolated experiments allowed earlier:
+Later production goal, with local library management and isolated experiments
+already allowed:
 
 - distinguish narration from dialogue
 - detect recurring speakers
@@ -933,6 +950,13 @@ Later production goal, with isolated experiments allowed earlier:
 Do not integrate this into production playback until aligned cached delivery is
 proven. Character voices and scene effects share its source/audio mapping and
 exact-request delivery contract.
+
+The standalone `master_voice_library/` package has completed M0A–M0C: versioned
+SQLite catalog, read-only Gemini synchronization, scoped characters, local
+annotations/tags, assignment history, and preference management. Its first
+complete sync imported 16 voices. The Empire of the Vampire series scope contains
+Gabriel de León, whose preferred slot 1 voice is Gemini “Gabriel de León 2”.
+This local assignment does not alter the Android or backend synthesis path.
 
 ---
 
@@ -1070,10 +1094,12 @@ Do not bury the next action.
 
 # Current Checkpoint
 
-Completed repository work includes Phase 2B.2A context-aware delivery and the
-validated standalone larger-generation-unit experiment, alongside the earlier
-Phase 1, Phase 2A, and Phase 2B.1 milestones. Phase 2B.2B is active. Source/audio
-alignment, cached slicing, and cached NeoReader playback are not yet implemented.
+Completed repository work includes Phase 2B.2A context-aware delivery, the
+validated standalone larger-generation-unit experiment, Master Voice Library
+M0A–M0C, and the earlier Phase 1, Phase 2A, and Phase 2B.1 milestones.
+Phase 2B.2B is active. A standalone alignment candidate exists but remains
+`ALIGNED_BUT_UNCERTAIN`; verified slicing and cached NeoReader playback are
+not implemented.
 
 The current known-good system can:
 
@@ -1099,9 +1125,10 @@ Stop cancels active work
 
 The product concept is proven.
 
-The next job is to prove source/audio alignment on one existing generated block.
-Verified slicing, request simulation, and cached Android delivery follow that
-proof. Narrator Lab can improve the master performance in parallel.
+The next alignment job is to complete the saved block's listening review and
+resolve uncertainty before verifying source/audio lookup. Verified slicing,
+request simulation, and cached Android delivery follow that proof. Narrator Lab
+and local voice-library refinement can continue in parallel.
 
 ---
 

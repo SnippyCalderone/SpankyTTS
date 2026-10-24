@@ -1,10 +1,10 @@
 # Spanky TTS — Development Status
 
-**Last updated:** 2026-10-15
+**Last updated:** 2026-10-23
 
 ## Current Phase
 
-**Phase 2B.2B — Alignment and Cached Playback is the active engineering milestone.** The immediate task is to evaluate alignment approaches on one existing approximately 3,000-character generated block and prove deterministic EPUB source-offset to audio-time lookup, including beginning/end completeness checks. No source/audio alignment, cached slicing, or cached NeoReader playback is implemented yet.
+**Phase 2B.2B — Alignment and Cached Playback remains the active engineering milestone.** A standalone experiment has mapped one existing narration block with Whisper ASR and source-token reconciliation. Its saved result is `ALIGNED_BUT_UNCERTAIN`, with listening-review clips prepared. Human review, verified source/audio lookup, cached slicing, and NeoReader playback integration remain pending.
 
 **Phase 2B.1 COMPLETE — Live OpenAI TTS transport on the physical BOOX**
 
@@ -16,7 +16,7 @@ The project has now proven the full end-to-end path from BOOX NeoReader to the l
 
 The current live per-request TTS path remains the fallback and safety path. A generative TTS edge case remains: the model can omit text at the absolute end of a final block or chapter.
 
-**Narrator Lab is the parallel experimental track.** It can explore delivery quality independently of Android playback. Production character voices are a later capability that depends on the aligned cached playback path. See `ROADMAP.md` for sequencing and dependencies.
+**Narrator Lab and the Master Voice Library are parallel local tracks.** The Master Voice Library M0A–M0C foundation is complete, including one character-to-voice assignment. The library does not yet supply voices to narration generation, Android, or NeoReader. Production character playback depends on the later proven cached playback path. See `ROADMAP.md` for sequencing and dependencies.
 
 ---
 
@@ -410,11 +410,23 @@ This milestone validates larger natural generation units, not text/audio alignme
 
 ---
 
+## Master Voice Library — M0A–M0C COMPLETE (LOCAL CATALOG)
+
+This standalone Python/SQLite package lives in `master_voice_library/` and is independent of books, Android, the backend, and narration generation.
+
+- **M0A:** versioned SQLite migrations, project-scoped stable voice identities, a read-only Google Voices adapter, fixture sync, and a local CLI.
+- **M0B:** the correct Google Gemini project was registered and the first live read-only scan completed in one page: **16 custom voices imported, zero duplicates**. Credentials remain outside SQLite and Git.
+- **M0C:** schema version 2 adds series/universe/book character scopes, characters, local voice annotations and tags, up to three active voice assignments per character, one preferred assignment, assignment history, and availability/expiration warnings. Provider sync does not overwrite local edits or silently switch a preferred voice.
+
+Before the version 1 to version 2 migration, SQLite backups passed integrity and foreign-key checks. After migration, all 16 voice rows, their stable identities, the project, sync run, and lineage rows matched the pre-migration catalog. The Master Voice Library offline suite passed with the copied 16-voice version 1 catalog included.
+
+The local catalog now contains the **Empire of the Vampire** series scope and **Gabriel de León** as a character. The Google Gemini voice **“Gabriel de León 2”** is assigned to Gabriel in slot 1, with role `character`, as his preferred voice. This is a catalog assignment; no chapter generation or BOOX/NeoReader playback uses it yet. Ashdrinker refinement and assignment, further character registrations, voice preview/comparison, and generation integration remain pending.
+
 ## Phase 2B.2B — ACTIVE ENGINEERING MILESTONE
 
 ### Source/audio alignment, cached slicing, and pre-generation
 
-The feasibility question for larger generation units has been answered positively. First prove a mapping from exact EPUB source spans to verified audio spans on one existing generated block before serving any part of a longer clip to NeoReader. Natural generation blocks are independent of NeoReader's arbitrary request boundaries; the request is mapped onto the source/audio span after generation.
+The feasibility question for larger generation units has been answered positively. The standalone `experiments/alignment/` tool now produces a candidate source/ASR word map and review clips for one existing block, but the saved status is `ALIGNED_BUT_UNCERTAIN`. A full listening review and resolution of discrepancies are required before treating any span as verified or serving longer audio to NeoReader. Natural generation blocks remain independent of NeoReader's arbitrary request boundaries; a future verified map must relate each request to its exact source/audio span.
 
 Required design work:
 
@@ -519,10 +531,11 @@ Android HTTP client: OkHttp 4.11.0
 
 ## Repository Checkpoint
 
-Completed repository work includes Phase 2B.2A context-aware delivery and the
-validated standalone larger-generation-unit experiment, in addition to the
-earlier milestones. Phase 2B.2B is the active engineering milestone; source/audio
-alignment, cached slicing, and cached NeoReader playback are not yet implemented.
+Completed repository work includes Phase 2B.2A context-aware delivery, the
+validated standalone larger-generation-unit experiment, the local Master Voice
+Library M0A–M0C, and the earlier milestones. Phase 2B.2B is active. Its
+standalone alignment result remains `ALIGNED_BUT_UNCERTAIN`; verified slicing
+and cached NeoReader playback are not implemented.
 
 The proven foundation includes:
 
@@ -538,6 +551,8 @@ The proven foundation includes:
 - cancellation support
 - Phase 2B.2A context-aware delivery, physically checked on the BOOX
 - standalone larger-generation-unit feasibility, validated by listening
+- local Master Voice Library with 16 synchronized Gemini voices and Gabriel's first preferred assignment
+- standalone one-block alignment and listening-review tooling, awaiting human verification
 
 ---
 
@@ -551,7 +566,7 @@ The fundamental end-to-end architecture is proven.
 
 ## Next Action
 
-Evaluate forced alignment, transcription with word timestamps, available model/provider timing metadata, and hybrid approaches on one existing approximately 3,000-character generated block. Prove deterministic lookup from known EPUB source offsets to audio timestamps and check for omitted beginning or ending text. Then proceed through verified slicing and request simulation before Android cached playback integration. Preserve:
+Complete the listening review of the saved one-block alignment, including every discrepancy and the beginning/end checks. Resolve uncertain timestamps and determine whether the block supports verified source-offset to audio-time lookup; investigate alternative alignment methods if it does not. Then proceed through verified slicing and request simulation before Android cached playback integration. Voice-library refinement may continue separately. Preserve:
 
 - Phase 2A anchoring
 - exact current-request speech

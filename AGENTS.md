@@ -28,8 +28,9 @@ If documentation and code disagree, report the discrepancy rather than silently 
 - Phase 2B.1 is complete and physically validated on the BOOX Go Color II.
 - Phase 2B.2A context-aware delivery is complete and physically checked on the BOOX.
 - Larger-generation-unit feasibility is validated in a standalone experiment.
-- **Phase 2B.2B — Alignment and Cached Playback** is the active engineering milestone. Its immediate task is a single-block source/audio alignment proof; alignment, cached slicing, and playback integration are not yet implemented.
+- **Phase 2B.2B — Alignment and Cached Playback** is the active engineering milestone. A standalone one-block alignment candidate and review clips exist, but the saved result is `ALIGNED_BUT_UNCERTAIN`; human review, verified slicing, and playback integration remain pending.
 - Narrator Lab is a parallel experimental track. Character-voice integration depends on the later proven cached playback path.
+- Master Voice Library M0A–M0C is complete as a local SQLite catalog with 16 synchronized Gemini voices and one preferred character assignment. It is not connected to narration generation or Android/NeoReader playback.
 
 Keep implementation scoped to the requested milestone in `ROADMAP.md`. Do not pull later cache, pre-generation, narration-director, or character-voice integration into earlier alignment work.
 

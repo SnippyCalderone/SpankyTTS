@@ -40,6 +40,10 @@ backend/.env
 backend/*.pcm
 backend/*.wav
 
+# Root-level local credentials
+/.env
+/.env.local
+
 # Python environments, bytecode, and test caches
 .venv/
 __pycache__/
@@ -60,3 +64,15 @@ experiments/alignment/output/
 experiments/gemini_tts/output/
 experiments/gemini_tts/.env
 experiments/gemini_tts/*.local.json
+
+# Master Voice Library local state and credentials
+master_voice_library/data/
+*.sqlite3
+*.sqlite3-*
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+master_voice_library/previews/
+master_voice_library/.env*
+master_voice_library/*.local.json

@@ -19,13 +19,14 @@ Completed milestones:
 - **Phase 2B.1:** Local FastAPI backend + OpenAI TTS + real PCM playback in NeoReader
 - **Phase 2B.2A:** Context-aware narration for reliably anchored requests, physically checked on BOOX
 - **Larger-generation-unit feasibility:** Standalone chapter TTS experiment validated improved narration continuity and quality
+- **Master Voice Library M0A–M0C:** Local SQLite catalog, read-only Gemini voice synchronization, and scoped character/voice management; 16 voices imported and Gabriel de León's first preferred assignment recorded
 
 Current Phase 2B.2B engineering work:
 
-- First prove source/audio alignment on one existing longer generated block.
+- Complete human review of the standalone one-block alignment result, currently `ALIGNED_BUT_UNCERTAIN`.
 - Then verify cached slices and request simulation, integrate Android cached playback, and develop a small pre-generation queue.
 
-Narrator-quality experiments can run in parallel in a separate Narrator Lab. Character voices are a later production capability after aligned cached playback is proven. The [development roadmap](ROADMAP.md) shows the sequence and dependencies.
+Narrator-quality experiments and local voice-library refinement can run in parallel. The library's assignments are not yet used by narration generation or Android. Character-voice playback in NeoReader is a later production capability after aligned cached playback is proven. The [development roadmap](ROADMAP.md) shows the sequence and dependencies.
 
 The current prototype can already read a real EPUB in NeoReader using OpenAI-generated speech.
 
@@ -145,6 +146,12 @@ Cancellation is supported both:
 - while the Android service is waiting on an in-flight backend request
 
 Cancelled requests do not proceed through the normal `done()` path.
+
+### Master Voice Library (local catalog)
+
+The standalone [Master Voice Library](master_voice_library/README.md) has a versioned SQLite catalog with stable provider-qualified voice identities. M0B registered the correct Gemini project and completed a read-only one-page sync of 16 voices with zero duplicates. M0C added schema version 2, scoped characters, local annotations and tags, up to three active voice assignments per character, preference and assignment history, and availability/expiration warnings. Verified backups preceded migration from version 1, and all 16 voice rows were preserved.
+
+The local catalog contains the **Empire of the Vampire** series and **Gabriel de León**. Gemini **“Gabriel de León 2”** is assigned to Gabriel in slot 1 as his preferred voice. This records a local selection; the current BOOX/NeoReader path still uses its existing OpenAI backend voice and does not consult the library. Ashdrinker refinement, further characters, preview/comparison, and generation integration remain pending.
 
 ---
 
@@ -267,6 +274,15 @@ SpankyTTS/
 │   ├── README.md
 │   └── requirements.txt
 │
+├── experiments/
+│   ├── alignment/
+│   ├── chapter_tts/
+│   └── gemini_tts/
+├── master_voice_library/
+│   ├── migrations/
+│   ├── tests/
+│   └── README.md
+│
 ├── gradle/
 │   └── wrapper/
 │
@@ -283,7 +299,7 @@ SpankyTTS/
 └── .gitignore
 ```
 
-Local-only files such as `local.properties`, `backend/.env`, the Python virtual environment, and generated PCM/WAV test audio are excluded from Git.
+Local-only files such as `local.properties`, `backend/.env`, Python virtual environments, Master Voice Library SQLite catalogs/backups, and generated audio are excluded from Git.
 
 ---
 
@@ -481,11 +497,14 @@ Phase 1, Phase 2A, Phase 2B.1, and Phase 2B.2A are complete. The standalone
 generation blocks improve narration quality; its audio is not yet aligned for
 NeoReader playback. A final-sentence omission remains an open fidelity issue.
 
-**Phase 2B.2B is active.** The next task is a single-block alignment proof,
-followed by verified slicing, NeoReader request simulation, Android cached
-playback with live fallback, and a small look-ahead queue. Narrator Lab explores
-delivery quality alongside that engineering work. Production character voices,
-scene audio, and release polish follow the aligned playback foundation.
+**Phase 2B.2B is active.** The standalone alignment experiment has an
+`ALIGNED_BUT_UNCERTAIN` candidate map and review clips; human verification is
+next, followed by verified slicing, NeoReader request simulation, Android cached
+playback with live fallback, and a small look-ahead queue. Narrator Lab and the
+completed local Master Voice Library run alongside that work. Ashdrinker voice
+refinement, further character assignments, and an optional preview interface
+remain local voice-library tasks. Production character playback, scene audio,
+and release polish follow the aligned playback foundation.
 
 See [ROADMAP.md](ROADMAP.md) for the detailed dependency-based plan and
 [STATUS.md](STATUS.md) for what has actually been verified.
