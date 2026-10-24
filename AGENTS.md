@@ -28,11 +28,20 @@ If documentation and code disagree, report the discrepancy rather than silently 
 - Phase 2B.1 is complete and physically validated on the BOOX Go Color II.
 - Phase 2B.2A context-aware delivery is complete and physically checked on the BOOX.
 - Larger-generation-unit feasibility is validated in a standalone experiment.
-- **Phase 2B.2B — Alignment and Cached Playback** is the active engineering milestone. A standalone one-block alignment candidate and review clips exist, but the saved result is `ALIGNED_BUT_UNCERTAIN`; human review, verified slicing, and playback integration remain pending.
-- Narrator Lab is a parallel experimental track. Character-voice integration depends on the later proven cached playback path.
+- **M0D.1 — Character Research & Voice Profile Foundation** is the immediate development focus, followed by M0D.2 custom voice creation, M0D.3 audition/refinement, and M0D.4 isolated character-aware chapter narration. These stages are planned, not implemented.
+- Gemini 3.8 Flash TTS is the selected target for custom character voices and planned audiobook narration. The existing Gemini Narrator Lab is an isolated experiment; it does not supply production playback.
+- **Phase 2B.2B — Alignment and Cached Playback** is deferred, not discarded. A standalone one-block candidate and review clips exist, but the saved result is `ALIGNED_BUT_UNCERTAIN`; human review, verified slicing, and playback integration remain pending. Production character-voice integration with NeoReader depends on a proven exact-request cached playback path.
 - Master Voice Library M0A–M0C is complete as a local SQLite catalog with 16 synchronized Gemini voices and one preferred character assignment. It is not connected to narration generation or Android/NeoReader playback.
 
-Keep implementation scoped to the requested milestone in `ROADMAP.md`. Do not pull later cache, pre-generation, narration-director, or character-voice integration into earlier alignment work.
+Keep implementation scoped to the requested milestone in `ROADMAP.md`. M0D.1 supports manual profiles and reusable, spoiler-aware research; it does not create voices or change playback. Do not pull cache, pre-generation, character evolution, or Android integration into M0D.1–M0D.3.
+
+For M0D work, require explicit user authorization before each paid research
+operation and before Gemini voice creation or regeneration. Ordinary viewing or
+editing of saved dossiers, prompt compilation, and offline tests must not make
+API calls. Preserve locally saved research results and citations for reuse.
+M0D.4 may start with short, manually attributed dialogue and controlled chapter
+excerpts; automated attribution, scene-level voice switching, and full-book
+character mapping are deferred.
 
 ## Important Constraints
 
@@ -98,7 +107,9 @@ When a task depends on current OpenAI API behavior, verify the current official 
 
 Current project assumptions include:
 
-- OpenAI speech model: `gpt-4o-mini-tts`
+- Existing live Android/FastAPI speech model: OpenAI `gpt-4o-mini-tts`, physically verified on the BOOX.
+- Planned OpenAI work: character research, dossier compilation, voice-description prompts, and optional later narration analysis/orchestration.
+- Selected future voice/narration target: Gemini 3.8 Flash TTS; no Gemini-to-NeoReader integration exists.
 - OpenAI credentials remain on the backend only.
 - Android/BOOX must never receive the OpenAI API key.
 - The existing backend returns raw PCM for Android playback.

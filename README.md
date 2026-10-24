@@ -21,14 +21,22 @@ Completed milestones:
 - **Larger-generation-unit feasibility:** Standalone chapter TTS experiment validated improved narration continuity and quality
 - **Master Voice Library M0A–M0C:** Local SQLite catalog, read-only Gemini voice synchronization, and scoped character/voice management; 16 voices imported and Gabriel de León's first preferred assignment recorded
 
-Current Phase 2B.2B engineering work:
+Immediate priority — **M0D.1 Character Research & Voice Profile Foundation** (planned, not implemented):
 
-- Complete human review of the standalone one-block alignment result, currently `ALIGNED_BUT_UNCERTAIN`.
-- Then verify cached slices and request simulation, integrate Android cached playback, and develop a small pre-generation queue.
+- Add spoiler-aware OpenAI character research or manual profile entry, with optional analysis of user-provided EPUB content.
+- Produce cited, editable dossiers, provider-neutral vocal traits, Gemini-specific voice-design prompts, and three distinct prompt drafts per character.
+- Reuse suitable approved library voices and provider IDs before considering any new generation.
 
-Narrator-quality experiments and local voice-library refinement can run in parallel. The library's assignments are not yet used by narration generation or Android. Character-voice playback in NeoReader is a later production capability after aligned cached playback is proven. The [development roadmap](ROADMAP.md) shows the sequence and dependencies.
+Paid research requires explicit user authorization. Saved research and citations
+should be reused; viewing or editing dossiers, compiling prompts, and offline
+tests make no API calls. Gemini voice creation and regeneration also require
+explicit approval.
 
-The current prototype can already read a real EPUB in NeoReader using OpenAI-generated speech.
+Gemini 3.8 Flash TTS is the selected target for custom character voice creation and planned audiobook narration. M0D.2 will create approved persistent voices; M0D.3 will audition and refine them; M0D.4 can begin with short manually attributed dialogue and controlled chapter excerpts outside Android. Automated attribution, scene-level voice switching, and full-book character mapping remain deferred. OpenAI models are planned for research, dossier and voice-prompt work, and optional later narration analysis. These M0D capabilities are not yet implemented. The [development roadmap](ROADMAP.md) shows the sequence and dependencies.
+
+The Phase 2B.2B alignment and cached playback work is deferred and preserved. Its one-block result is `ALIGNED_BUT_UNCERTAIN`; human review, verified slices, NeoReader request simulation, Android cached playback, and pre-generation remain pending. The library's assignments are not yet used by narration generation or Android. Character-voice playback in NeoReader still depends on proven exact-request cached delivery.
+
+The current prototype can already read a real EPUB in NeoReader using OpenAI `gpt-4o-mini-tts` speech. Gemini has not replaced this verified backend or been validated for NeoReader narration.
 
 The remaining issues are primarily narration quality and latency across NeoReader's small request boundaries.
 
@@ -151,7 +159,7 @@ Cancelled requests do not proceed through the normal `done()` path.
 
 The standalone [Master Voice Library](master_voice_library/README.md) has a versioned SQLite catalog with stable provider-qualified voice identities. M0B registered the correct Gemini project and completed a read-only one-page sync of 16 voices with zero duplicates. M0C added schema version 2, scoped characters, local annotations and tags, up to three active voice assignments per character, preference and assignment history, and availability/expiration warnings. Verified backups preceded migration from version 1, and all 16 voice rows were preserved.
 
-The local catalog contains the **Empire of the Vampire** series and **Gabriel de León**. Gemini **“Gabriel de León 2”** is assigned to Gabriel in slot 1 as his preferred voice. This records a local selection; the current BOOX/NeoReader path still uses its existing OpenAI backend voice and does not consult the library. Ashdrinker refinement, further characters, preview/comparison, and generation integration remain pending.
+The local catalog contains the **Empire of the Vampire** series and **Gabriel de León**. Gemini **“Gabriel de León 2”** is assigned to Gabriel in slot 1 as his preferred voice. This records a local selection; the current BOOX/NeoReader path still uses its existing OpenAI backend voice and does not consult the library. Ashdrinker refinement is planned for M0D with an end-of-first-book spoiler cutoff; further characters, preview/comparison, and generation integration remain pending.
 
 ---
 
@@ -497,14 +505,20 @@ Phase 1, Phase 2A, Phase 2B.1, and Phase 2B.2A are complete. The standalone
 generation blocks improve narration quality; its audio is not yet aligned for
 NeoReader playback. A final-sentence omission remains an open fidelity issue.
 
-**Phase 2B.2B is active.** The standalone alignment experiment has an
-`ALIGNED_BUT_UNCERTAIN` candidate map and review clips; human verification is
-next, followed by verified slicing, NeoReader request simulation, Android cached
-playback with live fallback, and a small look-ahead queue. Narrator Lab and the
-completed local Master Voice Library run alongside that work. Ashdrinker voice
-refinement, further character assignments, and an optional preview interface
-remain local voice-library tasks. Production character playback, scene audio,
-and release polish follow the aligned playback foundation.
+**M0D is next.** M0D.1 builds research, editable profiles, and three design
+prompts without creating voices. M0D.2 creates approved Gemini custom voices;
+M0D.3 auditions, refines, and selects them; M0D.4 experiments with Gemini
+character-aware chapter narration independently of Android. The existing
+[Gemini Narrator Lab](experiments/gemini_tts/README.md) remains an isolated
+experiment and does not read preferred library assignments.
+
+**Phase 2B.2B is deferred.** The standalone [alignment experiment](experiments/alignment/README.md)
+has an `ALIGNED_BUT_UNCERTAIN` candidate map and review clips. Human verification,
+exact cached slicing, NeoReader request simulation, Android integration with
+the proven live fallback, and a look-ahead queue remain later engineering work.
+Automated character evolution, scene-level voice state, and character-aware
+NeoReader playback are further deferred; production playback still requires
+exact-request source/audio mapping.
 
 See [ROADMAP.md](ROADMAP.md) for the detailed dependency-based plan and
 [STATUS.md](STATUS.md) for what has actually been verified.

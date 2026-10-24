@@ -16,7 +16,7 @@ The long-term goal is to make reading an EPUB in NeoReader feel closer to a prof
 
 # Current Development Phase
 
-## CURRENT CHECKPOINT: Phase 2B.2B ACTIVE; Master Voice Library M0A–M0C COMPLETE LOCALLY
+## CURRENT CHECKPOINT: M0D.1 NEXT; Master Voice Library M0A–M0C COMPLETE LOCALLY
 
 The core transport architecture is already proven on the physical BOOX.
 
@@ -57,12 +57,27 @@ remain required.
 
 The standalone one-block alignment experiment has produced a Whisper ASR/source
 candidate map and review clips, but its saved result is `ALIGNED_BUT_UNCERTAIN`.
-Human listening and discrepancy resolution are the next engineering task.
-Narrator Lab and the Master Voice Library run in parallel as isolated local
-tracks. The library contains 16 synchronized Gemini voices and one preferred
-Gabriel de León assignment, but it is not used by narration generation or
-Android. See `ROADMAP.md` for sequence and dependencies. Neither verified
-cached slicing nor Android cached playback has been implemented.
+Its human listening review and subsequent cached playback work are deferred,
+with the research and limitations preserved. Neither verified cached slicing
+nor Android cached playback has been implemented.
+
+M0D.1 is the immediate development priority: spoiler-aware character research
+or manual entry, cited editable profiles, provider-neutral vocal traits, and
+three Gemini-specific voice-design prompt drafts. M0D.2 creates approved
+persistent voices; M0D.3 auditions and refines them; M0D.4 experiments with
+Gemini narration using short manually attributed dialogue and controlled
+chapter excerpts independently of Android. Automated attribution, scene-level
+voice switching, and full-book character mapping are deferred. These stages
+are planned, not implemented. The library contains 16 synchronized Gemini
+voices and one preferred Gabriel de León assignment, but it is not used by
+narration generation or Android. See `ROADMAP.md` for sequence and dependencies.
+
+Gemini 3.8 Flash TTS is the selected target for character voices and planned
+audiobook generation. OpenAI models are planned for research, dossier and voice
+prompt work, and optional future narration analysis/orchestration. The current
+physically verified BOOX path still uses OpenAI `gpt-4o-mini-tts`; the standalone
+chapter and alignment experiments also used OpenAI audio. Gemini has not
+replaced that backend and has not been validated in NeoReader.
 
 ---
 
@@ -805,19 +820,19 @@ playback. Only exact current-request audio may be returned to NeoReader.
 
 ---
 
-# Phase 2B.2B — Active Engineering Milestone: Alignment and Cached Playback
+# Phase 2B.2B — Deferred Engineering Milestone: Alignment and Cached Playback
 
 The larger-generation-unit feasibility question has been answered positively.
-The immediate experiment must map known EPUB source offsets to audio timestamps
+The saved experiment aims to map known EPUB source offsets to audio timestamps
 in one existing approximately 3,000-character generated block. Compare forced
 alignment, transcription with word timestamps, available model/provider timing
 metadata, and hybrid approaches before selecting an alignment method. Detect
 missing speech at the beginning and end; a text plan alone does not prove the
 model actually spoke every word.
 
-## Dual-track development strategy
+## Preserved engineering strategy
 
-**Track A — core engineering** is the required path. Generate natural, larger
+**Later core engineering** is the required playback path. Generate natural, larger
 narration blocks ahead of demand; align their audio to exact EPUB source spans;
 then serve verified slices for whatever small requests NeoReader actually makes.
 The project is not trying to predict NeoReader's request boundaries before
@@ -832,12 +847,12 @@ NeoReader request → Phase 2A anchor → exact source span → cached PCM slice
                                            SynthesisCallback → NeoReader
 ```
 
-**Track B — Narrator Lab** is an independent experimental path; the current
+**Narrator Lab** is an independent experimental path; the current
 Gemini lab lives under `experiments/gemini_tts/`. It can compare voices,
 narration instructions,
 pacing, emotional range, scene dynamics, dialogue delivery, interruptions, and
 em-dash handling using A/B runs of the same short source excerpt. It must
-preserve exact book text and must not block or redefine Track A. Experimental
+preserve exact book text and must not redefine the deferred alignment path. Experimental
 results do not become Android playback behavior until the relevant architecture
 has been proven.
 
@@ -902,10 +917,29 @@ Do not implement naive request aggregation that violates the Android callback/re
 
 ---
 
-# Longer-Term Capabilities
+# M0D Voice Design and Longer-Term Capabilities
 
-`ROADMAP.md` is the source for sequence and dependencies. The following are
-later capabilities, after the aligned cached path is proven:
+The M0D.1–M0D.4 sequence is defined in `ROADMAP.md`. M0D.1 reuses existing
+character and voice records, accepts manual profiles, and optionally uses
+OpenAI online research or user-provided EPUB content within a spoiler cutoff.
+It compiles provider-neutral voice traits into three Gemini voice-design prompt
+drafts without automatically creating voices. Paid research requires explicit
+user authorization; saved results and citations should be reused. Viewing or
+editing saved dossiers, compiling prompts, and offline tests make no API calls.
+M0D.2 records new Gemini provider IDs and lineage only after explicitly
+approved creation or regeneration; M0D.3 uses standardized dialogue for
+audition and explicit preferred assignment. M0D.4 can begin with short manually
+attributed dialogue and controlled chapter excerpts. The existing 16 voices and preferred
+Gabriel de León assignment must be preserved. Ashdrinker refinement is planned
+with an end-of-first-book spoiler cutoff.
+
+Automated character aging, permanent or temporary vocal-change detection,
+flashback and nonlinear timeline analysis, scene-level voice assignment, and
+exact EPUB text-range to voice-state mapping are deferred. Store future voice
+variants without implementing this evolution engine in M0D.1–M0D.3.
+
+`ROADMAP.md` is the source for sequence and dependencies. The following
+production playback capabilities follow a proven aligned cached path:
 
 ## Usability
 
@@ -1097,9 +1131,9 @@ Do not bury the next action.
 Completed repository work includes Phase 2B.2A context-aware delivery, the
 validated standalone larger-generation-unit experiment, Master Voice Library
 M0A–M0C, and the earlier Phase 1, Phase 2A, and Phase 2B.1 milestones.
-Phase 2B.2B is active. A standalone alignment candidate exists but remains
-`ALIGNED_BUT_UNCERTAIN`; verified slicing and cached NeoReader playback are
-not implemented.
+M0D.1 is the next development step. Phase 2B.2B is deferred. Its standalone
+alignment candidate remains `ALIGNED_BUT_UNCERTAIN`; verified slicing and
+cached NeoReader playback are not implemented.
 
 The current known-good system can:
 
@@ -1125,10 +1159,10 @@ Stop cancels active work
 
 The product concept is proven.
 
-The next alignment job is to complete the saved block's listening review and
-resolve uncertainty before verifying source/audio lookup. Verified slicing,
-request simulation, and cached Android delivery follow that proof. Narrator Lab
-and local voice-library refinement can continue in parallel.
+The next job is the M0D.1 research and voice-profile foundation. Later, resume
+the saved block's listening review and resolve uncertainty before verifying
+source/audio lookup. Verified slicing, request simulation, and cached Android
+delivery follow that proof.
 
 ---
 

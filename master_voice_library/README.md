@@ -7,6 +7,38 @@ first M0B live, read-only Google sync completed with **16 imported voices,
 zero duplicates, one page**. M0C adds local management without a provider
 request or voice generation.
 
+## Next development priority — M0D
+
+M0D.1 is planned next: spoiler-aware OpenAI character research or manual entry,
+optional analysis of user-provided EPUB content, cited editable dossiers,
+provider-neutral vocal traits, Gemini-specific voice-design descriptions, and
+three distinct initial prompt drafts. Check existing approved voices and their
+provider IDs before proposing new generation. M0D.1 does not create voices,
+audition audio, or change preferred assignments. Paid research needs explicit
+user authorization. Save results and citations locally for reuse; ordinary
+dossier viewing or editing, prompt compilation, and offline tests make no API
+calls.
+
+M0D.2 will create explicitly approved persistent voices with Gemini 3.8 Flash TTS and
+register their provider IDs, metadata, and history without losing prior voices.
+M0D.3 will audition up to three active candidates with consistent dialogue,
+retain revisions and listening notes, require explicit approval for regeneration,
+and select a preferred assignment explicitly. M0D.4 can begin with short,
+manually attributed dialogue and controlled chapter excerpts outside
+Android and NeoReader. The existing catalog supports up to three active
+assignments but has no research dossiers, prompt compiler, creation client, or
+audition workflow yet. The future schema should allow multiple voice variants
+without implementing automated character evolution now.
+
+Automated dialogue attribution, scene-level voice switching, and full-book
+character mapping are deferred beyond the initial M0D.4 experiments.
+
+Ashdrinker is a planned illustrative character with an end-of-first-book
+spoiler cutoff. The existing 16 synchronized Gemini voices and Gabriel de
+León's preferred assignment remain the catalog baseline. The current live
+BOOX path still uses OpenAI `gpt-4o-mini-tts`; production character playback
+requires later verified alignment and exact-request cached delivery.
+
 M0A established the SQLite catalog and stable project-scoped voice identities;
 M0B registered the owning Google Gemini project and synchronized its voices;
 M0C added local character and voice management. Before the version 1 to 2

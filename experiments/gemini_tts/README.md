@@ -5,6 +5,16 @@ Chapter Five EPUB-source passage. It does not change Android, the backend,
 alignment, or the OpenAI chapter experiment. Generation requires `--generate`;
 `--dry-run` makes no Gemini API call and writes no output.
 
+Gemini 3.8 Flash TTS is the selected target for future custom character voices
+and audiobook generation. This lab demonstrates a controlled speech-generation
+experiment using a configured narrator voice; it does not create persistent
+custom voices, compile character profiles, read preferred library assignments,
+or provide NeoReader playback. M0D.1 will add research and voice-design prompt
+drafts in the Master Voice Library, followed by approved creation and audition
+in M0D.2–M0D.3 and isolated M0D.4 tests that can start with short, manually
+attributed dialogue and controlled chapter excerpts. Automated attribution,
+scene-level switching, and full-book mapping are deferred.
+
 ## Setup (PowerShell, from the repository root)
 
 The dedicated virtual environment already exists. Install only its pinned SDK:

@@ -5,6 +5,13 @@ recognized from its existing narration MP3. It does not change Android, the
 backend, or the Chapter Five fixture. It makes no OpenAI API call and does not
 create playback slices.
 
+The saved block is from the historical OpenAI chapter-generation experiment.
+This alignment work is deferred while M0D character research and voice design
+proceed; its code, artifacts, uncertainty, and later exact-request playback
+requirements are preserved. Gemini 3.8 Flash TTS is selected for future
+character voice and chapter-generation experiments, but Gemini audio has not
+been aligned or served to NeoReader.
+
 ## Fixed fixture
 
 `fixture.json` identifies the Chapter Five `20261014_060811_408632` run's

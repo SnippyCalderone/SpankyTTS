@@ -4,6 +4,13 @@ Minimal FastAPI backend that provides:
 - `GET /health`
 - `POST /tts` (OpenAI `gpt-4o-mini-tts`, raw PCM output)
 
+This remains the physically verified Android/NeoReader live playback path.
+Gemini 3.8 Flash TTS is the selected future target for custom character voices
+and planned audiobook narration, beginning with separate Master Voice Library
+M0D work. No Gemini voice or catalog assignment is used by this backend today.
+Deferred cached playback must preserve exact-request delivery and this working
+live path as its fallback.
+
 ## Setup (Windows PowerShell)
 
 From repository root:

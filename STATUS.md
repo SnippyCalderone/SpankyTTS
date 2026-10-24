@@ -1,10 +1,12 @@
 # Spanky TTS — Development Status
 
-**Last updated:** 2026-10-23
+**Last updated:** 2026-10-24
 
 ## Current Phase
 
-**Phase 2B.2B — Alignment and Cached Playback remains the active engineering milestone.** A standalone experiment has mapped one existing narration block with Whisper ASR and source-token reconciliation. Its saved result is `ALIGNED_BUT_UNCERTAIN`, with listening-review clips prepared. Human review, verified source/audio lookup, cached slicing, and NeoReader playback integration remain pending.
+**M0D.1 — Character Research & Voice Profile Foundation is the immediate development priority.** It is not implemented yet. The next work is spoiler-aware OpenAI research or manual profile entry, cited and editable dossiers, provider-neutral vocal traits, Gemini-specific voice-design prompts, and three distinct prompt candidates. Paid research requires explicit user authorization; saved research and citations should be reused, and offline dossier work must not make API calls. M0D.2 voice creation, M0D.3 audition/refinement, and M0D.4 isolated Gemini narration tests with manually attributed dialogue and controlled excerpts follow in that order.
+
+**Phase 2B.2B — Alignment and Cached Playback is deferred.** A standalone experiment mapped one existing OpenAI narration block with Whisper ASR and source-token reconciliation. Its saved result is `ALIGNED_BUT_UNCERTAIN`, with listening-review clips prepared. Human review, verified source/audio lookup, cached slicing, and NeoReader playback integration remain pending; the experiment and its findings are preserved.
 
 **Phase 2B.1 COMPLETE — Live OpenAI TTS transport on the physical BOOX**
 
@@ -12,11 +14,13 @@ The project has now proven the full end-to-end path from BOOX NeoReader to the l
 
 **Phase 2B.2A COMPLETE — context-aware delivery is physically validated on the BOOX, with modest continuity gains and a known request-boundary limitation.**
 
-**Larger-generation-unit feasibility milestone VALIDATED / COMPLETE.** A separate chapter TTS experiment showed that longer coherent generation materially improves continuity and audiobook quality. It does not change NeoReader playback. The current engineering work is source/audio alignment and, later, cached slicing so each NeoReader request receives only its corresponding audio span.
+**Larger-generation-unit feasibility milestone VALIDATED / COMPLETE.** A separate OpenAI chapter TTS experiment showed that longer coherent generation materially improves continuity and audiobook quality. It does not change NeoReader playback. Source/audio alignment and cached slicing remain future work so each NeoReader request can eventually receive only its corresponding audio span.
 
 The current live per-request TTS path remains the fallback and safety path. A generative TTS edge case remains: the model can omit text at the absolute end of a final block or chapter.
 
-**Narrator Lab and the Master Voice Library are parallel local tracks.** The Master Voice Library M0A–M0C foundation is complete, including one character-to-voice assignment. The library does not yet supply voices to narration generation, Android, or NeoReader. Production character playback depends on the later proven cached playback path. See `ROADMAP.md` for sequencing and dependencies.
+**Selected future technology direction:** Gemini 3.8 Flash TTS for persistent custom character voices and planned audiobook narration generation. OpenAI models are planned primarily for online character research, dossier and voice-description work, and optional later narration analysis/orchestration. This does not replace the existing, physically verified OpenAI `gpt-4o-mini-tts` Android/FastAPI path or imply Gemini narration works in NeoReader.
+
+**Narrator Lab and the Master Voice Library remain isolated local tracks.** The Master Voice Library M0A–M0C foundation is complete, including one character-to-voice assignment. The library does not yet supply voices to narration generation, Android, or NeoReader. Production character playback depends on the later proven cached playback path. See `ROADMAP.md` for sequencing and dependencies.
 
 ---
 
@@ -422,7 +426,7 @@ Before the version 1 to version 2 migration, SQLite backups passed integrity and
 
 The local catalog now contains the **Empire of the Vampire** series scope and **Gabriel de León** as a character. The Google Gemini voice **“Gabriel de León 2”** is assigned to Gabriel in slot 1, with role `character`, as his preferred voice. This is a catalog assignment; no chapter generation or BOOX/NeoReader playback uses it yet. Ashdrinker refinement and assignment, further character registrations, voice preview/comparison, and generation integration remain pending.
 
-## Phase 2B.2B — ACTIVE ENGINEERING MILESTONE
+## Phase 2B.2B — DEFERRED ENGINEERING MILESTONE
 
 ### Source/audio alignment, cached slicing, and pre-generation
 
@@ -533,9 +537,10 @@ Android HTTP client: OkHttp 4.11.0
 
 Completed repository work includes Phase 2B.2A context-aware delivery, the
 validated standalone larger-generation-unit experiment, the local Master Voice
-Library M0A–M0C, and the earlier milestones. Phase 2B.2B is active. Its
-standalone alignment result remains `ALIGNED_BUT_UNCERTAIN`; verified slicing
-and cached NeoReader playback are not implemented.
+Library M0A–M0C, and the earlier milestones. M0D.1 is next but has not been
+implemented. Phase 2B.2B is deferred; its standalone alignment result remains
+`ALIGNED_BUT_UNCERTAIN`, and verified slicing and cached NeoReader playback are
+not implemented.
 
 The proven foundation includes:
 
@@ -566,7 +571,9 @@ The fundamental end-to-end architecture is proven.
 
 ## Next Action
 
-Complete the listening review of the saved one-block alignment, including every discrepancy and the beginning/end checks. Resolve uncertain timestamps and determine whether the block supports verified source-offset to audio-time lookup; investigate alternative alignment methods if it does not. Then proceed through verified slicing and request simulation before Android cached playback integration. Voice-library refinement may continue separately. Preserve:
+Begin M0D.1 with an additive, backed-up catalog design for editable cited dossiers and prompt revisions. Support manual profile entry, research and optional user-provided EPUB analysis within a spoiler cutoff, provider-neutral traits, three Gemini voice-design prompt drafts, and reuse checks for existing approved voices. Require user authorization for paid research and preserve saved citations; dossier viewing/editing, prompt compilation, and offline tests make no API calls. Do not create voices or audio in M0D.1. Later voice creation and regeneration require explicit approval. Ashdrinker can illustrate the workflow with an end-of-first-book cutoff; Gabriel's preferred assignment and all 16 synchronized voices must remain intact.
+
+Later, resume the saved one-block alignment's listening review, including every discrepancy and beginning/end checks. Resolve uncertain timestamps before verified lookup, slicing, request simulation, or Android cached playback. Throughout M0D and later playback work, preserve:
 
 - Phase 2A anchoring
 - exact current-request speech

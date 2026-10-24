@@ -2,6 +2,12 @@
 
 This developer-only utility uses a native file picker and a terminal chapter menu to generate one EPUB chapter as sequential OpenAI MP3 parts. It does not use the Android app or the production `/tts` endpoint.
 
+This is historical OpenAI `gpt-4o-mini-tts` feasibility work. Gemini 3.8 Flash
+TTS is the selected target for later M0D.4 character-aware chapter narration,
+which has not been implemented or connected to this utility. The saved OpenAI
+audio and its alignment research remain valid experimental evidence. Alignment,
+cached slicing, and NeoReader playback integration are deferred.
+
 ## Feasibility result and limit
 
 The long-form feasibility milestone is validated. Two Chapter Five listening runs found materially better continuity, pacing, dialogue transitions, and audiobook quality than short independent NeoReader requests. The second run resolved the observed middle-of-chapter omissions. The remaining known issue is that generative TTS can omit text at the absolute end of the final block even when the exact source and planned block files contain it. In isolated tests, the final sentence was spoken when genuine next-chapter text followed it, and when fidelity instructions were added to the short final paragraph. The later full-chapter run still omitted that sentence despite the fidelity instructions.
